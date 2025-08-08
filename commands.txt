@@ -1,0 +1,45 @@
+___VENV___
+python -m venv venv
+venv\Scripts\activate    # Windows
+pip install -r requirements.txt
+
+___SETUP___
+# Установка зависимостей
+pip install -r requirements.txt - Установка всех Python-пакетов
+# Инициализация БД
+sqlite3 data/sfera36.sqlite < data/migrations/init_db.sql - Создание БД из SQL-скрипта
+# Создание папок (если их нет)
+mkdir -p ui/ui_modules data/migrations - Создание директорий для UI и миграций БД
+
+___UI___
+# Запуск Qt Designer
+pyside6-designer - Открыть редактор интерфейсов
+# Конвертация .ui -> .py
+pyside6-uic ui/pages/main_window.ui -o ui/ui_modules/ui_main_window.py - Преобразование UI-файла в Python-код
+# Автоматическая конвертация ВСЕХ .ui файлов (Linux/macOS)
+find ui/pages -name "*.ui" | xargs -I {} pyside6-uic {} -o ui/ui_modules/ui_{}.py
+
+___BUILD___
+# Сборка в .exe (Windows)
+pyinstaller main.py --onefile --windowed --icon=assets/icon.ico - Создание portable-версии
+# Сборка в .app (macOS)
+pyinstaller main.py --onefile --windowed --name "Sfera36Terminal"
+# Запуск в режиме разработки
+python main.py - Запуск приложения без сборки
+
+___TEST___
+# Запуск всех тестов
+pytest tests/ - Тестирование Python-кода
+
+___GIT___
+# Инициализация репозитория
+git init - Создать локальный репозиторий
+
+# Привязка к GitHub
+git remote add origin https://github.com/MrVSus/sfera36-terminal.git
+
+# Стандартные команды
+git add . - Добавить все файлы в коммит
+git commit -m "Описание изменений" - Создать коммит
+git push origin main - Отправить изменения на GitHub
+
