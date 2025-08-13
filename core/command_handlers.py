@@ -11,87 +11,86 @@ class CommandHandlers:
             '062': self.handle_asr,
             '063': self.handle_asl
         }
-        
+
     def execute(self, opcode, word_byte, addr_mode, reg_num, pc):
-        """Основной метод выполнения команд"""
         handler = self.opcodes.get(opcode)
         if not handler:
             raise ValueError(f"Неизвестный код операции: {opcode}")
-        
-        return handler(
-            word_byte=word_byte,
-            addr_mode=addr_mode,
-            reg_num=reg_num,
-            pc=pc
-        )
-    def _validate_reg(self, cpu, reg_name):
-        if reg_name == 'R7':
-            raise ValueError("Регистр R7 нельзя использовать в операциях")  
-    def _update_flags(self, cpu, value, carry=None):
-        # Установка флагов N (negative) и Z (zero)
-        cpu.flags.N = (value >> 15) & 1
-        cpu.flags.Z = 1 if value == 0 else 0
-        
-        # Флаг C (carry)
+        return handler(word_byte, addr_mode, reg_num, pc)
+
+    def _update_flags(self, value, is_word, carry=None):
+        mask = 0xFFFF if is_word else 0xFF
+        sign_bit = 15 if is_word else 7
+        v = value & mask
+        self.cpu.flags.N = (v >> sign_bit) & 1
+        self.cpu.flags.Z = 1 if v == 0 else 0
         if carry is not None:
-            cpu.flags.C = carry
-    def handle_clr(self, cpu, cmd):
-        """Очистка регистра (50)"""
-        reg = self._validate_reg(cpu, cmd['reg'])
-        cpu.registers.general[reg] = 0
-        self._update_flags(cpu, 0)
-        return f"Регистр {reg} очищен"
-    
-    def handle_com(self, cpu, cmd):
-        """Инверсия регистра (51)"""
-        reg = self._validate_reg(cpu, cmd['reg'])
-        value = cpu.registers.general[reg]
-        cpu.registers.general[reg] = ~value & 0xFFFF
-        self._update_flags(cpu, cpu.registers.general[reg])
-        return f"Инверсия {reg} = {cpu.registers.general[reg]}"
-    
-    def handle_inc(self, cpu, cmd):
-        """Инкремент регистра (52)"""
-        reg = self._validate_reg(cpu, cmd['reg'])
-        cpu.registers.general[reg] = (cpu.registers.general[reg] + 1) & 0xFFFF
-        self._update_flags(cpu, cpu.registers.general[reg])
-        return f"INC {reg} = {cpu.registers.general[reg]}"
-    
-    def handle_dec(self, cpu, cmd):
-        """Декремент регистра (53)"""
-        reg = self._validate_reg(cpu, cmd['reg'])
-        cpu.registers.general[reg] = (cpu.registers.general[reg] - 1) & 0xFFFF
-        self._update_flags(cpu, cpu.registers.general[reg])
-        return f"DEC {reg} = {cpu.registers.general[reg]}"
-    
-    def handle_neg(self, cpu, cmd):
-        """Смена знака (54)"""
-        reg = self._validate_reg(cpu, cmd['reg'])
-        value = cpu.registers.general[reg]
-        cpu.registers.general[reg] = (-value) & 0xFFFF
-        self._update_flags(cpu, cpu.registers.general[reg])
-        return f"NEG {reg} = {cpu.registers.general[reg]}"
-    
-    def handle_tst(self, cpu, cmd):
-        """Тестирование регистра (57)"""
-        reg = self._validate_reg(cpu, cmd['reg'])
-        value = cpu.registers.general[reg]
-        self._update_flags(cpu, value)
-        return f"TST {reg} = {value}"
-    
-    def handle_asr(self, cpu, cmd):
-        """Арифметический сдвиг вправо (62)"""
-        reg = self._validate_reg(cpu, cmd['reg'])
-        value = cpu.registers.general[reg]
-        cpu.registers.general[reg] = (value >> 1) & 0xFFFF
-        self._update_flags(cpu, cpu.registers.general[reg])
-        return f"ASR {reg} = {cpu.registers.general[reg]}"
-    
-    def handle_asl(self, cpu, cmd):
-        """Арифметический сдвиг влево (63)"""
-        reg = self._validate_reg(cpu, cmd['reg'])
-        value = cpu.registers.general[reg]
-        cpu.registers.general[reg] = (value << 1) & 0xFFFF
-        self._update_flags(cpu, cpu.registers.general[reg])
-        return f"ASL {reg} = {cpu.registers.general[reg]}"
-    
+            self.cpu.flags.C = 1 if carry else 0
+
+    def handle_clr(self, word_byte, addr_mode, reg_num, pc):
+        val, write_back = self.cpu.resolve_operand(word_byte, addr_mode, reg_num)
+        write_back(0)
+        self._update_flags(0, word_byte == '0')
+        return f"CLR -> 0"
+
+    def handle_com(self, word_byte, addr_mode, reg_num, pc):
+        val, write_back = self.cpu.resolve_operand(word_byte, addr_mode, reg_num)
+        mask = 0xFFFF if word_byte == '0' else 0xFF
+        new_val = (~val) & mask
+        write_back(new_val)
+        self._update_flags(new_val, word_byte == '0')
+        return f"COM: {val} -> {new_val}"
+
+    def handle_inc(self, word_byte, addr_mode, reg_num, pc):
+        val, write_back = self.cpu.resolve_operand(word_byte, addr_mode, reg_num)
+        mask = 0xFFFF if word_byte == '0' else 0xFF
+        new_val = (val + 1) & mask
+        write_back(new_val)
+        carry = 1 if new_val == 0 else 0
+        self._update_flags(new_val, word_byte == '0', carry)
+        return f"INC: {val} -> {new_val}"
+
+    def handle_dec(self, word_byte, addr_mode, reg_num, pc):
+        val, write_back = self.cpu.resolve_operand(word_byte, addr_mode, reg_num)
+        mask = 0xFFFF if word_byte == '0' else 0xFF
+        new_val = (val - 1) & mask
+        write_back(new_val)
+        carry = 1 if new_val == mask else 0
+        self._update_flags(new_val, word_byte == '0', carry)
+        return f"DEC: {val} -> {new_val}"
+
+    def handle_neg(self, word_byte, addr_mode, reg_num, pc):
+        val, write_back = self.cpu.resolve_operand(word_byte, addr_mode, reg_num)
+        mask = 0xFFFF if word_byte == '0' else 0xFF
+        new_val = (-val) & mask
+        write_back(new_val)
+        carry = 1 if val != 0 else 0
+        self._update_flags(new_val, word_byte == '0', carry)
+        return f"NEG: {val} -> {new_val}"
+
+    def handle_tst(self, word_byte, addr_mode, reg_num, pc):
+        val, _ = self.cpu.resolve_operand(word_byte, addr_mode, reg_num)
+        self._update_flags(val, word_byte == '0')
+        return f"TST: {val}"
+
+    def handle_asr(self, word_byte, addr_mode, reg_num, pc):
+        val, write_back = self.cpu.resolve_operand(word_byte, addr_mode, reg_num)
+        is_word = (word_byte == '0')
+        mask = 0xFFFF if is_word else 0xFF
+        sign_bit = 15 if is_word else 7
+        sign = (val >> sign_bit) & 1
+        new_val = ((val >> 1) | (sign << sign_bit)) & mask
+        carry = val & 1
+        write_back(new_val)
+        self._update_flags(new_val, is_word, carry)
+        return f"ASR: {val} -> {new_val}"
+
+    def handle_asl(self, word_byte, addr_mode, reg_num, pc):
+        val, write_back = self.cpu.resolve_operand(word_byte, addr_mode, reg_num)
+        is_word = (word_byte == '0')
+        mask = 0xFFFF if is_word else 0xFF
+        carry = 1 if (val & (1 << (15 if is_word else 7))) else 0
+        new_val = (val << 1) & mask
+        write_back(new_val)
+        self._update_flags(new_val, is_word, carry)
+        return f"ASL: {val} -> {new_val}"
