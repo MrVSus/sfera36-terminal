@@ -2,7 +2,7 @@ from core.processor import CPU
 
 class ConsoleTerminal:
     def __init__(self):
-        self.cpu = CPU()
+        self.cpu = CPU(db_manager=None, db_debug=True, debug=True)
     def run(self):
         print("Терминал 'Сфера-36' (восьмеричная система)")
         print("Форматы команд:")

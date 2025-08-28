@@ -1,13 +1,21 @@
-import sys
-from pathlib import Path
-from ui.console_ui import ConsoleTerminal
-# Добавляем корень проекта в PYTHONPATH
-sys.path.insert(0, str(Path(__file__).parent))
+from PySide6.QtWidgets import QApplication, QMainWindow
+from core.processor import CPU
+from ui.pages.terminal_window import TerminalPage
 
 
-def main():
-    terminal = ConsoleTerminal()
-    terminal.run()
+class MainWindow(QMainWindow):
+    def __init__(self):
+        super().__init__()
+        self.cpu = CPU()
+        self.setWindowTitle("Сфера-36 — Терминал")
+        self.resize(800, 600)
+
+        self.terminal_page = TerminalPage(self.cpu)
+        self.setCentralWidget(self.terminal_page)
+
 
 if __name__ == "__main__":
-    main()
+    app = QApplication([])
+    window = MainWindow()
+    window.show()
+    app.exec()
