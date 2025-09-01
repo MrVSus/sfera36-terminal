@@ -1,0 +1,5 @@
+PySide6>=6.6.0
+panda3d>=1.10.15
+pyinstaller>=6.14.2
+pytest>=8.4.1
+black>=23.9.1
