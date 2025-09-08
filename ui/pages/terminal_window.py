@@ -93,9 +93,6 @@ class TerminalPage(QWidget):
                 self._append_command("BUS ERROR")
                 return
             self.cpu._mem_write_word(addr, val)
-            # выводим подтверждение
-            # self._append_command(f"{addr:06o}/")
-            # self._append_command(f"{val:06o}")
             self.last_addr = addr
             self.last_reg = None
             return
@@ -105,9 +102,6 @@ class TerminalPage(QWidget):
             reg_str, val_str = cmd.split("/")
             val = int(val_str, 8)
             self.cpu.set_register(reg_str, val)
-            # выводим подтверждение
-            # self._append_command(f"{reg_str}/")
-            # self._append_command(f"{val:06o}")
             self.last_reg = int(reg_str[1:])
             self.last_addr = None
             return
@@ -131,9 +125,6 @@ class TerminalPage(QWidget):
                 self._append_command("BUS ERROR")
                 return
             value = self.cpu._mem_read_word(addr)
-            # сначала адрес
-            # self._append_command(f"{addr:06o}/")
-            # потом значение
             self._append_command(f"{value:06o}")
             self.last_addr = addr
             self.last_reg = None
@@ -174,8 +165,6 @@ class TerminalPage(QWidget):
             self.last_reg = next_reg
         else:
             self._append_command("")
-
-        # приглашение для следующего ввода
         self._append_command(self.prompt)
 
     # ---------- вывод ----------

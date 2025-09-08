@@ -186,11 +186,6 @@ class CommandHandlers:
         self._set_nz(s_val, is_word=False)
 
         return "MOVB", s_ex + d_ex
-
-
-
-
-
     # ---------- ADD ----------
     def op_add(self, pc, kind2, sm, sr, dm, dr, raw):
         s_val, _, s_ex, s_ea = self.decode_src(True, pc, sm, sr)

@@ -18,7 +18,6 @@ class CPU:
 
    # ---------- Проверка BUS ----------
     def _check_bus(self, addr: int):
-        """Проверка выхода за границу — диапазон 0..0o157776 (восьмеричный)."""
         a = int(addr) & 0xFFFF
         # верхняя граница в восьмеричной 0o157776 -> в int:
         max_addr = int('157776', 8)
@@ -28,12 +27,6 @@ class CPU:
 
     # ---------- Line Feed helper ----------
     def _line_feed(self):
-        """
-        Выполнить "следующее чтение" в соответствии с last_read.
-        - Если last_read is ('mem', addr, width) -> читать addr+step, где step=2 для word, 1 для byte.
-        - Если last_read is ('reg', idx) -> читать следующий регистр (idx+1 mod 8).
-        Возвращает строку результата или None.
-        """
         if not self.last_read:
             return None
 
@@ -46,16 +39,13 @@ class CPU:
             try:
                 self._check_bus(next_addr)
             except RuntimeError as e:
-                # вернуть ровно "BUS ERROR"
                 return "BUS ERROR"
             if (next_addr & 1) == 0:
                 v = self._mem_read_word(next_addr)
-                # сохраняем новый контекст (слово)
                 self.last_read = ('mem', next_addr, 'word')
                 return f"{v:06o}"
             else:
                 v = self._mem_read_byte(next_addr)
-                # сохраняем новый контекст (байт)
                 self.last_read = ('mem', next_addr, 'byte')
                 return f"{v:03o}"
 
@@ -63,46 +53,32 @@ class CPU:
             _, reg_idx = self.last_read
             next_reg = (int(reg_idx) + 1) % 8
             val = self.db.get_register_value(next_reg) & 0xFFFF
-            # сохраняем новый контекст как регистр целиком
             self.last_read = ('reg', next_reg)
             return f"{val:06o}"
 
         return None
     def execute(self, raw_command: str):
-        """
-        Консольный интерфейс процессора.
-        Если raw_command пустая строка -> подаём Line Feed (_line_feed).
-        Возвращаем:
-        - строку с выводом (например "077400" / "002001" / "BUS ERROR")
-        - None для команд, которые не должны печатать ничего
-        """
         try:
-            # 1) Line Feed (Enter без команды)
             if raw_command is not None and raw_command.strip() == "":
                 return self._line_feed()
 
             parsed = self.parser.parse(raw_command)
 
-            # Регистровое чтение
             if parsed['type'] == 'REG_READ':
                 reg = parsed['reg']  # формат "R1"
                 reg_idx = int(reg[1:])
                 value = self.get_register(reg)
-                # сохраняем контекст: регистровое чтение
                 self.last_read = ('reg', reg_idx)
                 return f"{value:06o}"
 
-            # Регистровая запись
             if parsed['type'] == 'REG_WRITE':
                 val = int(parsed['value'], 8)
                 self.set_register(parsed['reg'], val)
                 self.last_read = None
                 return None
 
-            # Чтение памяти
             if parsed['type'] == 'MEM_READ':
                 addr = int(parsed['addr'], 8)
-                # проверка шины
                 try:
                     self._check_bus(addr)
                 except RuntimeError as e:
@@ -117,7 +93,6 @@ class CPU:
                     self.last_read = ('mem', addr, 'byte')
                     return f"{v:03o}"
 
-            # Запись памяти
             if parsed['type'] == 'MEM_WRITE':
                 addr = int(parsed['addr'], 8)
                 try:
@@ -134,9 +109,6 @@ class CPU:
                     if (addr & 1) == 0:
                         self._mem_write_word(addr, ival)
                     else:
-                        # в режиме, где мы решили: запись по нечётному адресу -> записать слово в базовый чётный адрес
-                        # если ты настаиваешь на варианте "всегда слово" — замени вызов set_byte на set_word ниже
-                        # здесь оставим корректную байтовую запись:
                         self._mem_write_byte(addr, ival & 0xFF)
 
                 self.last_read = None
@@ -159,7 +131,6 @@ class CPU:
             return "Неизвестная команда"
 
         except Exception as e:
-            # Если это наш BUS ERROR — вернуть именно "BUS ERROR"
             msg = str(e)
             if msg == "BUS ERROR":
                 return "BUS ERROR"
@@ -183,7 +154,6 @@ class CPU:
     def execute(self, raw_command: str):
         try:
             if raw_command.strip() == "":
-                # Line Feed
                 if not self.last_read:
                     return None
                 kind, obj = self.last_read
@@ -271,7 +241,6 @@ class CPU:
                 break
 
             if wval == 0:
-                # HALT
                 self._set_pc((pc + 2) & 0xFFFF)
                 break
 
@@ -292,7 +261,7 @@ class CPU:
     def _raw_mem_fetch(self, addr: int) -> str:
         base = int(addr) & ~1
         phys = self._map_addr(base, for_code=True)
-        hi, lo = self.db.get_memory_bytes(phys)  # returns ints 0..255
+        hi, lo = self.db.get_memory_bytes(phys)  
         word = ((hi << 8) | lo) & 0xFFFF
         if self.debug:
             print(f"[DBG FETCH] logical {base:o} -> phys {phys:o} : {word:06o} (hi={hi:03o} lo={lo:03o})")
@@ -368,8 +337,8 @@ class CPU:
           value, write_back_fn, extra_words, effective_address
         """
 
-        data_step = 2 if is_word else 1  # шаг для данных
-        ptr_step = 2                     # шаг для указателей (в deferred режимах)
+        data_step = 2 if is_word else 1  
+        ptr_step = 2                     
         reg_name = f"R{reg}"
 
         # ----------------- helpers -----------------
@@ -427,9 +396,9 @@ class CPU:
                 return val, wb, 1, abs_addr
 
             ptr_addr = self.get_register(reg_name) & 0xFFFF
-            ea = self._mem_read_word(ptr_addr)   # слово-указатель
-            self.set_register(reg_name, (ptr_addr + ptr_step) & 0xFFFF)  # автоинкремент
-            val = read_ea(ea)  # читаем ОПЕРАНД по адресу, хранящемуся в указателе
+            ea = self._mem_read_word(ptr_addr)  
+            self.set_register(reg_name, (ptr_addr + ptr_step) & 0xFFFF)  
+            val = read_ea(ea)  
             wb = (lambda v, a=ea: write_ea(a, v)) if as_dest else None
             return val, wb, 0, ea
 
