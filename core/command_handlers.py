@@ -1,310 +1,221 @@
-# core/command_handlers.py
+
 
 class CommandHandlers:
 
     def __init__(self, cpu):
         self.cpu = cpu
 
-        # Карты опкодов
-        self.opcodes_two_addr = {
-            '01': self._op_mov,
-            '11': self._op_movb,
-            '02': self._op_cmp,
-            '12': self._op_cmpb,
-            '03': self._op_bit,
-            '13': self._op_bitb,
-            '04': self._op_bic,
-            '14': self._op_bicb,
-            '05': self._op_bis,
-            '15': self._op_bisb,
-            '06': self._op_add,
-            '16': self._op_sub,
+     
+        self._one = {
+            '050': self.op_clr,
+            '051': self.op_com,
+            '052': self.op_inc,
+            '053': self.op_dec,
+            '054': self.op_neg,
         }
 
-        self.opcodes_one_addr = {
-            '050': self._op_clr,
-            '051': self._op_com,
-            '052': self._op_inc,
-            '053': self._op_dec,
-            '054': self._op_neg,
-            '057': self._op_tst,
-            '062': self._op_asr,
-            '063': self._op_asl,
+    
+        self._two = {
+            0o01: self.op_mov,   
+            0o11: self.op_movb,  
+            0o06: self.op_add,
+            0o16: self.op_sub,
         }
 
-    # ------------------ ВСПОМОГАТЕЛЬНОЕ: парсинг слова ------------------
+    # ---------- Диспетчер ----------
+    def execute(self, *, pc: int, raw_word: str):
+        raw = str(raw_word).zfill(6)
 
-    def _parse_two_addr(self, raw_word: str):
-        # D0..D5 — символы '0'..'7'
-        D = raw_word
-        size_is_word = (D[0] == '0')
-        op2 = D[0:2]                  # '01','11',..
-        src_mode = int(D[2], 8)
-        src_reg  = int(D[3], 8)
-        dst_mode = int(D[4], 8)
-        dst_reg  = int(D[5], 8)
-        return size_is_word, op2, src_mode, src_reg, dst_mode, dst_reg
+        try:
+            word = int(raw, 8)
+        except Exception:
+            return (f"UNKNOWN {raw}", 0)
 
-    def _parse_one_addr(self, raw_word: str):
-        D = raw_word
-        size_is_word = (D[0] == '0')
-        op3 = D[1:4]                  # '050','051',...
-        mode = int(D[4], 8)
-        reg  = int(D[5], 8)
-        return size_is_word, op3, mode, reg
+        opcode_high = (word >> 12) & 0o17
 
-    # ------------------ ФЛАГИ ------------------
+        if opcode_high in self._two:
+            src_mode = (word >> 9) & 0o7
+            src_reg  = (word >> 6) & 0o7
+            dst_mode = (word >> 3) & 0o7
+            dst_reg  = word & 0o7
+            handler = self._two[opcode_high]
+            return handler(pc, f"{raw[:2]}", src_mode, src_reg, dst_mode, dst_reg, raw)
 
-    def _upd_flags_nz(self, value: int, is_word: bool):
+        op3 = raw[1:4]
+        if op3 in self._one:
+            wb_flag = raw[0]
+            mode    = int(raw[4], 8)
+            reg     = int(raw[5], 8)
+            return self._one[op3](pc, wb_flag, mode, reg, raw)
+
+        return (f"UNKNOWN {raw}", 0)
+
+    # ---------- Декодеры ----------
+    def decode_src(self, is_word: bool, pc: int, mode: int, reg: int):
+        val, wb, extra, ea = self.cpu.resolve_operand(
+            is_word=is_word, mode=mode, reg=reg, pc=pc, as_dest=False
+        )
+        return val, wb, extra, ea
+
+    def decode_dst(self, is_word: bool, pc: int, mode: int, reg: int):
+        val, wb, extra, ea = self.cpu.resolve_operand(
+            is_word=is_word, mode=mode, reg=reg, pc=pc, as_dest=True
+        )
+        return val, wb, extra, ea
+
+    # ---------- Флаги ----------
+    def _set_nz(self, value: int, is_word: bool):
         mask = 0xFFFF if is_word else 0xFF
-        sign = 0x8000 if is_word else 0x80
+        sign_bit = 15 if is_word else 7
         v = value & mask
-        self.cpu.flags.N = 1 if (v & sign) else 0
+        self.cpu.flags.N = (v >> sign_bit) & 1
         self.cpu.flags.Z = 1 if v == 0 else 0
 
-    def _upd_flags_nzc(self, value: int, is_word: bool, carry: int | None):
-        self._upd_flags_nz(value, is_word)
-        if carry is not None:
-            self.cpu.flags.C = 1 if carry else 0
-
-    # ------------------ ДВУАДРЕСНЫЕ ------------------
-
-    def _two_addr_common(self, raw_word: str, pc: int):
-        is_word, op2, s_mode, s_reg, d_mode, d_reg = self._parse_two_addr(raw_word)
-        # Источник
-        s_val, _s_w, s_ex = self.cpu.resolve_operand(
-            is_word=is_word, mode=s_mode, reg=s_reg, pc=pc, as_dest=False
-        )
-        # Приёмник (учитываем слова источника!)
-        d_pc = (pc + s_ex * 2) & 0xFFFF
-        _d_val, d_w, d_ex = self.cpu.resolve_operand(
-            is_word=is_word, mode=d_mode, reg=d_reg, pc=d_pc, as_dest=True
-        )
-        return is_word, op2, s_val, d_w, (s_ex + d_ex)
-
-    def _op_mov(self, raw_word: str, pc: int):
-        is_word, _, s_val, d_w, extra = self._two_addr_common(raw_word, pc)
-        if d_w: d_w(s_val)
-        self._upd_flags_nz(s_val, True)
-        return "MOV", extra
-
-    def _op_movb(self, raw_word: str, pc: int):
-        is_word, _, s_val, d_w, extra = self._two_addr_common(raw_word, pc)
-        # для MOVB is_word=False
-        if d_w: d_w(s_val & 0xFF)
-        self._upd_flags_nz(s_val, False)
-        return "MOVB", extra
-
-    def _op_add(self, raw_word: str, pc: int):
-        is_word, _, s_val, d_w, extra = self._two_addr_common(raw_word, pc)
-        # Для add нужен d_val, но адресация уже отработала (декремент/инкремент выполнены).
-        # Возьмем фактическое место назначения ещё раз для чтения:
-        # Трюк: повторим адресацию приёмника как источник (as_dest=False) с тем же d_pc.
-        is_word2, op2, s_mode, s_reg, d_mode, d_reg = self._parse_two_addr(raw_word)
-        d_pc = (pc + (extra - 0) * 2) & 0xFFFF  # грубо: в этом простом варианте повторно считаем ниже
-        # Правильнее — заново вычислить (s_ex) и затем d_pc, как в _two_addr_common:
-        # Пересчёт:
-        s_val2, _, s_ex = self.cpu.resolve_operand(is_word=is_word2, mode=s_mode, reg=s_reg, pc=pc, as_dest=False)
-        d_pc = (pc + s_ex * 2) & 0xFFFF
-        d_val, _dw, _dex = self.cpu.resolve_operand(is_word=True, mode=d_mode, reg=d_reg, pc=d_pc, as_dest=False)
-
-        res = (d_val + (s_val & 0xFFFF)) & 0xFFFF
-        carry = 1 if (d_val + (s_val & 0xFFFF)) > 0xFFFF else 0
-        if d_w: d_w(res)
-        self._upd_flags_nzc(res, True, carry)
-        return "ADD", s_ex + _dex
-
-    def _op_sub(self, raw_word: str, pc: int):
-        is_word, _, s_val, d_w, extra = self._two_addr_common(raw_word, pc)
-        is_word2, op2, s_mode, s_reg, d_mode, d_reg = self._parse_two_addr(raw_word)
-        s_val2, _, s_ex = self.cpu.resolve_operand(is_word=is_word2, mode=s_mode, reg=s_reg, pc=pc, as_dest=False)
-        d_pc = (pc + s_ex * 2) & 0xFFFF
-        d_val, _dw, d_ex = self.cpu.resolve_operand(is_word=True, mode=d_mode, reg=d_reg, pc=d_pc, as_dest=False)
-
-        res = (d_val - (s_val & 0xFFFF)) & 0xFFFF
-        carry = 1 if d_val < (s_val & 0xFFFF) else 0
-        if d_w: d_w(res)
-        self._upd_flags_nzc(res, True, carry)
-        return "SUB", s_ex + d_ex
-
-    def _op_cmp(self, raw_word: str, pc: int):
-        is_word, _, s_mode, s_reg, d_mode, d_reg = self._parse_two_addr(raw_word)
-        s_val, _sw, s_ex = self.cpu.resolve_operand(is_word=True, mode=s_mode, reg=s_reg, pc=pc, as_dest=False)
-        d_pc = (pc + s_ex * 2) & 0xFFFF
-        d_val, _dw, d_ex = self.cpu.resolve_operand(is_word=True, mode=d_mode, reg=d_reg, pc=d_pc, as_dest=False)
-        res = (d_val - s_val) & 0xFFFF
-        carry = 1 if d_val < s_val else 0
-        self._upd_flags_nzc(res, True, carry)
-        return "CMP", s_ex + d_ex
-
-    def _op_cmpb(self, raw_word: str, pc: int):
-        is_word, _, s_mode, s_reg, d_mode, d_reg = self._parse_two_addr(raw_word)
-        s_val, _sw, s_ex = self.cpu.resolve_operand(is_word=False, mode=s_mode, reg=s_reg, pc=pc, as_dest=False)
-        d_pc = (pc + s_ex * 2) & 0xFFFF
-        d_val, _dw, d_ex = self.cpu.resolve_operand(is_word=False, mode=d_mode, reg=d_reg, pc=d_pc, as_dest=False)
-        res = ((d_val & 0xFF) - (s_val & 0xFF)) & 0xFF
-        carry = 1 if (d_val & 0xFF) < (s_val & 0xFF) else 0
-        self._upd_flags_nzc(res, False, carry)
-        return "CMPB", s_ex + d_ex
-
-    def _op_bit(self, raw_word: str, pc: int):
-        is_word, _, s_mode, s_reg, d_mode, d_reg = self._parse_two_addr(raw_word)
-        s_val, _sw, s_ex = self.cpu.resolve_operand(is_word=True, mode=s_mode, reg=s_reg, pc=pc, as_dest=False)
-        d_pc = (pc + s_ex * 2) & 0xFFFF
-        d_val, _dw, d_ex = self.cpu.resolve_operand(is_word=True, mode=d_mode, reg=d_reg, pc=d_pc, as_dest=False)
-        res = d_val & s_val
-        self._upd_flags_nz(res, True)
-        return "BIT", s_ex + d_ex
-
-    def _op_bitb(self, raw_word: str, pc: int):
-        is_word, _, s_mode, s_reg, d_mode, d_reg = self._parse_two_addr(raw_word)
-        s_val, _sw, s_ex = self.cpu.resolve_operand(is_word=False, mode=s_mode, reg=s_reg, pc=pc, as_dest=False)
-        d_pc = (pc + s_ex * 2) & 0xFFFF
-        d_val, _dw, d_ex = self.cpu.resolve_operand(is_word=False, mode=d_mode, reg=d_reg, pc=d_pc, as_dest=False)
-        res = (d_val & s_val) & 0xFF
-        self._upd_flags_nz(res, False)
-        return "BITB", s_ex + d_ex
-
-    def _op_bic(self, raw_word: str, pc: int):
-        is_word, _, s_val, d_w, extra = self._two_addr_common(raw_word, pc)
-        # заново получим d_val для флага:
-        is_word2, op2, s_mode, s_reg, d_mode, d_reg = self._parse_two_addr(raw_word)
-        s_val2, _sw, s_ex = self.cpu.resolve_operand(is_word=True, mode=s_mode, reg=s_reg, pc=pc, as_dest=False)
-        d_pc = (pc + s_ex * 2) & 0xFFFF
-        d_val, _dw, d_ex = self.cpu.resolve_operand(is_word=True, mode=d_mode, reg=d_reg, pc=d_pc, as_dest=False)
-
-        res = d_val & (~s_val)
-        if d_w: d_w(res & 0xFFFF)
-        self._upd_flags_nz(res, True)
-        return "BIC", s_ex + d_ex
-
-    def _op_bicb(self, raw_word: str, pc: int):
-        is_word, _, s_val, d_w, extra = self._two_addr_common(raw_word, pc)
-        is_word2, op2, s_mode, s_reg, d_mode, d_reg = self._parse_two_addr(raw_word)
-        s_val2, _sw, s_ex = self.cpu.resolve_operand(is_word=False, mode=s_mode, reg=s_reg, pc=pc, as_dest=False)
-        d_pc = (pc + s_ex * 2) & 0xFFFF
-        d_val, _dw, d_ex = self.cpu.resolve_operand(is_word=False, mode=d_mode, reg=d_reg, pc=d_pc, as_dest=False)
-
-        res = (d_val & (~s_val)) & 0xFF
-        if d_w: d_w(res)
-        self._upd_flags_nz(res, False)
-        return "BICB", s_ex + d_ex
-
-    def _op_bis(self, raw_word: str, pc: int):
-        is_word, _, s_val, d_w, extra = self._two_addr_common(raw_word, pc)
-        if d_w: d_w((s_val) & 0xFFFF)
-        self._upd_flags_nz(s_val, True)
-        return "BIS", extra
-
-    def _op_bisb(self, raw_word: str, pc: int):
-        is_word, _, s_val, d_w, extra = self._two_addr_common(raw_word, pc)
-        if d_w: d_w(s_val & 0xFF)
-        self._upd_flags_nz(s_val, False)
-        return "BISB", extra
-
-    # ------------------ ОДНОАДРЕСНЫЕ ------------------
-
-    def _one_addr_common(self, raw_word: str, pc: int, for_write: bool):
-        is_word, op3, mode, reg = self._parse_one_addr(raw_word)
-        val, wb, extra = self.cpu.resolve_operand(
-            is_word=is_word, mode=mode, reg=reg, pc=pc, as_dest=for_write
-        )
-        return is_word, op3, val, wb, extra
-
-    def _op_clr(self, raw_word: str, pc: int):
-        is_word, _, _val, wb, extra = self._one_addr_common(raw_word, pc, True)
-        if not wb: raise ValueError("CLR требует адрес для записи")
+    # ---------- CLR / CLRB ----------
+    def op_clr(self, pc, wb_flag, mode, reg, raw):
+        is_word = (wb_flag == '0')
+        val, wb, extra, ea = self.cpu.resolve_operand(is_word=is_word, mode=mode, reg=reg, pc=pc, as_dest=True)
+        if not wb:
+            raise ValueError("CLR/CLRB: destination not writable")
         wb(0)
-        self._upd_flags_nzc(0, is_word, carry=0)
-        return "CLR", extra
+        self.cpu.flags.N = 0
+        self.cpu.flags.Z = 1
+        self.cpu.flags.C = 0
+        return ("CLR" if is_word else "CLRB"), extra
 
-    def _op_com(self, raw_word: str, pc: int):
-        is_word, _, val, wb, extra = self._one_addr_common(raw_word, pc, True)
-        if not wb: raise ValueError("COM требует адрес для записи")
+    # ---------- COM / COMB ----------
+    def op_com(self, pc, wb_flag, mode, reg, raw):
+        is_word = (wb_flag == '0')
+        val, wb, extra, ea = self.cpu.resolve_operand(is_word=is_word, mode=mode, reg=reg, pc=pc, as_dest=True)
+        if not wb:
+            raise ValueError("COM/COMB: destination not writable")
+        newv = (~val) & (0xFFFF if is_word else 0xFF)
+        wb(newv)
+        self.cpu.flags.N = 1 if (newv & (0x8000 if is_word else 0x80)) else 0
+        self.cpu.flags.Z = 1 if newv == 0 else 0
+        self.cpu.flags.C = 1
+        return ("COM" if is_word else "COMB"), extra
+
+    # ---------- INC / INCB ----------
+    def op_inc(self, pc, wb_flag, mode, reg, raw):
+        is_word = (wb_flag == '0')
+        val, wb, extra, ea = self.cpu.resolve_operand(is_word=is_word, mode=mode, reg=reg, pc=pc, as_dest=True)
+        if not wb:
+            raise ValueError("INC/INCB: destination not writable")
         mask = 0xFFFF if is_word else 0xFF
-        res = (~val) & mask
-        wb(res)
-        # PDP-11: C=1 для COM
-        self._upd_flags_nzc(res, is_word, carry=1)
-        return "COM", extra
+        newv = (val + 1) & mask
+        wb(newv)
+        self.cpu.flags.N = 1 if (newv & (0x8000 if is_word else 0x80)) else 0
+        self.cpu.flags.Z = 1 if newv == 0 else 0
+        self.cpu.flags.C = 1 if newv == 0 else 0
+        return ("INC" if is_word else "INCB"), extra
 
-    def _op_inc(self, raw_word: str, pc: int):
-        is_word, _, val, wb, extra = self._one_addr_common(raw_word, pc, True)
-        if not wb: raise ValueError("INC требует адрес для записи")
+    # ---------- DEC / DECB ----------
+    def op_dec(self, pc, wb_flag, mode, reg, raw):
+        is_word = (wb_flag == '0')
+        val, wb, extra, ea = self.cpu.resolve_operand(is_word=is_word, mode=mode, reg=reg, pc=pc, as_dest=True)
+        if not wb:
+            raise ValueError("DEC/DECB: destination not writable")
         mask = 0xFFFF if is_word else 0xFF
-        res = (val + 1) & mask
-        carry = 1 if res == 0 else 0
-        wb(res)
-        self._upd_flags_nzc(res, is_word, carry)
-        return "INC", extra
+        newv = (val - 1) & mask
+        wb(newv)
+        self.cpu.flags.N = 1 if (newv & (0x8000 if is_word else 0x80)) else 0
+        self.cpu.flags.Z = 1 if newv == 0 else 0
+        self.cpu.flags.C = 1 if newv == mask else 0
+        return ("DEC" if is_word else "DECB"), extra
 
-    def _op_dec(self, raw_word: str, pc: int):
-        is_word, _, val, wb, extra = self._one_addr_common(raw_word, pc, True)
-        if not wb: raise ValueError("DEC требует адрес для записи")
+    # ---------- NEG / NEGB ----------
+    def op_neg(self, pc, wb_flag, mode, reg, raw):
+        is_word = (wb_flag == '0')
+        val, wb, extra, ea = self.cpu.resolve_operand(is_word=is_word, mode=mode, reg=reg, pc=pc, as_dest=True)
+        if not wb:
+            raise ValueError("NEG/NEGB: destination not writable")
         mask = 0xFFFF if is_word else 0xFF
-        res = (val - 1) & mask
-        carry = 1 if res == mask else 0
-        wb(res)
-        self._upd_flags_nzc(res, is_word, carry)
-        return "DEC", extra
+        newv = ((~val) + 1) & mask
+        wb(newv)
+        self.cpu.flags.N = 1 if (newv & (0x8000 if is_word else 0x80)) else 0
+        self.cpu.flags.Z = 1 if newv == 0 else 0
+        self.cpu.flags.C = 1 if val != 0 else 0
+        return ("NEG" if is_word else "NEGB"), extra
 
-    def _op_neg(self, raw_word: str, pc: int):
-        is_word, _, val, wb, extra = self._one_addr_common(raw_word, pc, True)
-        if not wb: raise ValueError("NEG требует адрес для записи")
-        mask = 0xFFFF if is_word else 0xFF
-        res = (-val) & mask
-        carry = 1 if val != 0 else 0
-        wb(res)
-        self._upd_flags_nzc(res, is_word, carry)
-        return "NEG", extra
+    # ---------- MOV ----------
+    def op_mov(self, pc, kind2, sm, sr, dm, dr, raw):
+        s_val, _, s_ex, s_ea = self.decode_src(True, pc, sm, sr)
+        dst_pc = (pc + s_ex * 2) & 0xFFFF
+        _, d_wb, d_ex, d_ea = self.decode_dst(True, dst_pc, dm, dr)
+        if not d_wb:
+            raise ValueError("MOV: destination not writable")
+        d_wb(s_val & 0xFFFF)
+        self.cpu.flags.N = 1 if (s_val & 0x8000) else 0
+        self.cpu.flags.Z = 1 if s_val == 0 else 0
+        return "MOV", s_ex + d_ex
 
-    def _op_tst(self, raw_word: str, pc: int):
-        is_word, _, val, _wb, extra = self._one_addr_common(raw_word, pc, False)
-        self._upd_flags_nz(val, is_word)
-        return "TST", extra
-
-    def _op_asr(self, raw_word: str, pc: int):
-        is_word, _, val, wb, extra = self._one_addr_common(raw_word, pc, True)
-        if not wb: raise ValueError("ASR требует адрес для записи")
-        if is_word:
-            carry = val & 1
-            res = ((val >> 1) | (val & 0x8000)) & 0xFFFF
+    # ---------- MOVB ----------
+    def op_movb(self, pc, kind2, sm, sr, dm, dr, raw):
+        s_val, _s_wb, s_ex, s_ea = self.decode_src(False, pc, sm, sr)
+        dst_pc = (pc + (s_ex * 2)) & 0xFFFF
+        d_val, d_wb, d_ex, d_ea = self.decode_dst(False, dst_pc, dm, dr)
+        if not d_wb and d_ea is None:
+            raise ValueError("MOVB: destination not writable")
+        if s_ea is not None:
+            s_word = self.cpu._mem_read_word(s_ea & ~1)
         else:
-            carry = val & 1
-            res = ((val >> 1) | (val & 0x80)) & 0xFF
-        wb(res)
-        self._upd_flags_nzc(res, is_word, carry)
-        return "ASR", extra
 
-    def _op_asl(self, raw_word: str, pc: int):
-        is_word, _, val, wb, extra = self._one_addr_common(raw_word, pc, True)
-        if not wb: raise ValueError("ASL требует адрес для записи")
-        if is_word:
-            carry = 1 if (val & 0x8000) else 0
-            res = (val << 1) & 0xFFFF
+            s_word = s_val & 0xFF  
+            s_word = (s_word << 8) | s_word  
+
+        s_hi = (s_word >> 8) & 0xFF
+        s_lo = s_word & 0xFF
+
+        if d_ea is not None:
+            dest_base = int(d_ea) & ~1
+            old_word = self.cpu._mem_read_word(dest_base)
+
+            if (int(d_ea) & 1):  
+                
+                new_word = ((s_hi & 0xFF) << 8) | (old_word & 0x00FF)
+            else:  
+                
+                new_word = (old_word & 0xFF00) | (s_lo & 0xFF)
+
+
+            self.cpu._mem_write_word(dest_base, new_word)
         else:
-            carry = 1 if (val & 0x80) else 0
-            res = (val << 1) & 0xFF
-        wb(res)
-        self._upd_flags_nzc(res, is_word, carry)
-        return "ASL", extra
+            d_wb(s_val & 0xFF)
 
-    # ------------------ ДИСПЕТЧЕР ------------------
+        self._set_nz(s_val, is_word=False)
 
-    def execute(self, *, opcode: str, word_byte: str, addr_tail, pc: int, raw_word: str):
-        """
-        Универсальный вход для CPU._run_program.
-        Мы не полагаемся на переданный opcode, а распознаём сами из raw_word.
-        """
-        D0D1 = raw_word[:2]
-        if D0D1 in self.opcodes_two_addr:
-            # двухадресная
-            return self.opcodes_two_addr[D0D1](raw_word, pc)
+        return "MOVB", s_ex + d_ex
 
-        # одноадресная
-        _is_word, op3, _mode, _reg = self._parse_one_addr(raw_word)
-        if op3 in self.opcodes_one_addr:
-            return self.opcodes_one_addr[op3](raw_word, pc)
 
-        # неизвестно — считаем, что доп. слов нет
-        return f"Неизвестная команда {raw_word}", 0
+
+
+
+    # ---------- ADD ----------
+    def op_add(self, pc, kind2, sm, sr, dm, dr, raw):
+        s_val, _, s_ex, s_ea = self.decode_src(True, pc, sm, sr)
+        dst_pc = (pc + s_ex * 2) & 0xFFFF
+        d_val, d_wb, d_ex, d_ea = self.decode_dst(True, dst_pc, dm, dr)
+        if not d_wb:
+            raise ValueError("ADD: destination not writable")
+        full = d_val + s_val
+        res = full & 0xFFFF
+        d_wb(res)
+        self.cpu.flags.N = 1 if (res & 0x8000) else 0
+        self.cpu.flags.Z = 1 if res == 0 else 0
+        self.cpu.flags.C = 1 if full > 0xFFFF else 0
+        return "ADD", s_ex + d_ex
+
+    # ---------- SUB ----------
+    def op_sub(self, pc, kind2, sm, sr, dm, dr, raw):
+        s_val, _, s_ex, s_ea = self.decode_src(True, pc, sm, sr)
+        dst_pc = (pc + s_ex * 2) & 0xFFFF
+        d_val, d_wb, d_ex, d_ea = self.decode_dst(True, dst_pc, dm, dr)
+        if not d_wb:
+            raise ValueError("SUB: destination not writable")
+        res = (d_val - s_val) & 0xFFFF
+        d_wb(res)
+        self.cpu.flags.N = 1 if (res & 0x8000) else 0
+        self.cpu.flags.Z = 1 if res == 0 else 0
+        self.cpu.flags.C = 1 if d_val < s_val else 0
+        return "SUB", s_ex + d_ex

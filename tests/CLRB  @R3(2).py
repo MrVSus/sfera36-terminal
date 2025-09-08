@@ -2,10 +2,6 @@ import sys
 from pathlib import Path
 # Путь на один уровень выше папки tests
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
-import sys
-from pathlib import Path
-# Путь на один уровень выше папки tests
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from core.processor import CPU
 from data.database import DatabaseManager
@@ -28,15 +24,14 @@ def run_script(script_lines):
 
 # Пример сценария из лекции
 script = """
-    1000/005062
-    1002/500
-    1004/0
-    R2/1500
-    2200/123
+    1000/105013
+    1002/0
+    R3/2000
+    2000/177777
     1000G
-    2200/
-    R2/
     R3/
+    2000/
 """
+
 if __name__ == "__main__":
     run_script(script.strip().splitlines())

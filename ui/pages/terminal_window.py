@@ -7,9 +7,10 @@ from PySide6.QtCore import Qt
 
 
 class TerminalPage(QWidget):
-    def __init__(self, cpu, parent=None):
+    def __init__(self, cpu, prompt="> ", parent=None):
         super().__init__(parent)
         self.cpu = cpu
+        self.prompt = prompt
         self.dark_mode = True
 
         # фиксированный размер окна
@@ -30,7 +31,6 @@ class TerminalPage(QWidget):
         self.input_line = QLineEdit()
         self.input_line.setFont(QFont("Consolas", 12))
         self.input_line.returnPressed.connect(self.process_command)
-
         layout.addWidget(self.input_line)
 
         # --- Кнопки ---
@@ -49,6 +49,10 @@ class TerminalPage(QWidget):
         self.history = []
         self.max_lines = 25
 
+        # запоминаем последний контекст (ячейка или регистр)
+        self.last_addr = None
+        self.last_reg = None
+
         # применяем тему
         self.apply_theme()
 
@@ -59,17 +63,23 @@ class TerminalPage(QWidget):
     def process_command(self):
         command = self.input_line.text().strip()
         if not command:
+            # пустая строка → line feed
+            self.line_feed()
             return
 
-        # выводим команду в терминал
+        # выводим команду в терминал (эха-ввод)
         self._append_command(f"> {command}")
 
         try:
             self.handle_command(command)
-        except Exception:
-            pass
+        except Exception as e:
+            self._append_command(f"Ошибка: {e}")
+
+        # добавляем приглашение для следующего ввода
+        self._append_command(self.prompt)
 
         self.input_line.clear()
+
 
     def handle_command(self, command: str):
         cmd = command.strip().upper()
@@ -79,7 +89,15 @@ class TerminalPage(QWidget):
             addr_str, val_str = cmd.split("/")
             addr = int(addr_str, 8)
             val = int(val_str, 8)
+            if addr > 0o157776:
+                self._append_command("BUS ERROR")
+                return
             self.cpu._mem_write_word(addr, val)
+            # выводим подтверждение
+            # self._append_command(f"{addr:06o}/")
+            # self._append_command(f"{val:06o}")
+            self.last_addr = addr
+            self.last_reg = None
             return
 
         # запись в регистр RX/VAL
@@ -87,30 +105,80 @@ class TerminalPage(QWidget):
             reg_str, val_str = cmd.split("/")
             val = int(val_str, 8)
             self.cpu.set_register(reg_str, val)
+            # выводим подтверждение
+            # self._append_command(f"{reg_str}/")
+            # self._append_command(f"{val:06o}")
+            self.last_reg = int(reg_str[1:])
+            self.last_addr = None
             return
 
         # чтение регистра RX/
         if cmd.endswith("/") and cmd.startswith("R") and cmd[1:-1].isdigit():
             reg_name = cmd[:-1]
             value = self.cpu.get_register(reg_name)
+            # сначала сам запрос
+            # self._append_command(f"{reg_name}/")
+            # потом результат
             self._append_command(f"{value:06o}")
+            self.last_reg = int(reg_name[1:])
+            self.last_addr = None
             return
 
         # чтение памяти XXXX/
         if cmd.endswith("/") and cmd[0].isdigit():
             addr = int(cmd[:-1], 8)
+            if addr > 0o157776:
+                self._append_command("BUS ERROR")
+                return
             value = self.cpu._mem_read_word(addr)
+            # сначала адрес
+            # self._append_command(f"{addr:06o}/")
+            # потом значение
             self._append_command(f"{value:06o}")
+            self.last_addr = addr
+            self.last_reg = None
             return
 
         # запуск XXXXG
         if cmd.endswith("G") and cmd[:-1].isdigit():
             addr = int(cmd[:-1], 8)
+            if addr > 0o157776:
+                self._append_command("BUS ERROR")
+                return
             self.cpu._set_pc(addr)
-            self.cpu._run_program()
+            out = self.cpu._run_program()
+            if out:
+                self._append_command(out)
+            self.last_addr = None
+            self.last_reg = None
             return
 
+        self._append_command("Неизвестная команда")
 
+    # ---------- line feed ----------
+    def line_feed(self):
+        if self.last_addr is not None:
+            next_addr = self.last_addr + 2
+            if next_addr > 0o157776:
+                self._append_command("BUS ERROR")
+                return
+            value = self.cpu._mem_read_word(next_addr)
+            self._append_command(f"{next_addr:06o}/")
+            self._append_command(f"{value:06o}")
+            self.last_addr = next_addr
+        elif self.last_reg is not None:
+            next_reg = (self.last_reg + 1) % 8
+            value = self.cpu.get_register(f"R{next_reg}")
+            self._append_command(f"R{next_reg}/")
+            self._append_command(f"{value:06o}")
+            self.last_reg = next_reg
+        else:
+            self._append_command("")
+
+        # приглашение для следующего ввода
+        self._append_command(self.prompt)
+
+    # ---------- вывод ----------
     def _append_command(self, text: str):
         self.history.append(text)
 

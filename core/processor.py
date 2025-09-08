@@ -1,61 +1,169 @@
+
 from types import SimpleNamespace
 from data.database import DatabaseManager
-from .command_parser import CommandParser
 from .command_handlers import CommandHandlers
-
-class Registers:
-    def __init__(self):
-        self.regs = [0] * 8  # R0..R7
-
-    def get(self, n: int) -> int:
-        return self.regs[n] & 0xFFFF
-
-    def set(self, n: int, val: int):
-        self.regs[n] = val & 0xFFFF
-
-    def __getitem__(self, key):
-        if isinstance(key, str) and key.startswith("R"):
-            return self.get(int(key[1:]))
-        return self.get(key)
-
-    def __setitem__(self, key, value):
-        if isinstance(key, str) and key.startswith("R"):
-            self.set(int(key[1:]), value)
-        else:
-            self.set(key, value)
-class Memory:
-    def __init__(self, size=65536):
-        self.mem = [0] * size  # 64K памяти по байтам
-
-    def get_byte(self, addr: int) -> int:
-        return self.mem[addr & 0xFFFF]
-
-    def set_byte(self, addr: int, val: int):
-        self.mem[addr & 0xFFFF] = val & 0xFF
-
-    def get_word(self, addr: int) -> int:
-        lo = self.get_byte(addr)
-        hi = self.get_byte(addr + 1)
-        return ((hi << 8) | lo) & 0xFFFF
-
-    def set_word(self, addr: int, val: int):
-        self.set_byte(addr, val & 0xFF)         # младший байт
-        self.set_byte(addr + 1, (val >> 8) & 0xFF)  # старший байт
+from .command_parser import CommandParser
 
 class CPU:
 
     def __init__(self, db_manager=None, db_debug=False, debug=False):
         self.db = db_manager or DatabaseManager(debug=db_debug)
         self.parser = CommandParser()
-        self.opcodes = CommandHandlers(self)
+        self.op = CommandHandlers(self)
         self.flags = SimpleNamespace(N=0, Z=0, C=0)
         self.debug = debug
-        self.mem = Memory()
-        self.regs = Registers()
 
-        # Окно для отображения низких адресов (0..01777) на БД (1000..2777)
         self._lowpage_base = self.db.MIN_ADDR  # 0o1000
+        self.last_read = None  # ('mem', addr) или ('reg', 'R1')
 
+   # ---------- Проверка BUS ----------
+    def _check_bus(self, addr: int):
+        """Проверка выхода за границу — диапазон 0..0o157776 (восьмеричный)."""
+        a = int(addr) & 0xFFFF
+        # верхняя граница в восьмеричной 0o157776 -> в int:
+        max_addr = int('157776', 8)
+        if not (0 <= a <= max_addr):
+            # возвращаем специфическую строку сверху — но бросим исключение чтобы остановить flow
+            raise RuntimeError("BUS ERROR")
+
+    # ---------- Line Feed helper ----------
+    def _line_feed(self):
+        """
+        Выполнить "следующее чтение" в соответствии с last_read.
+        - Если last_read is ('mem', addr, width) -> читать addr+step, где step=2 для word, 1 для byte.
+        - Если last_read is ('reg', idx) -> читать следующий регистр (idx+1 mod 8).
+        Возвращает строку результата или None.
+        """
+        if not self.last_read:
+            return None
+
+        kind = self.last_read[0]
+
+        if kind == 'mem':
+            _, addr, width = self.last_read
+            step = 1 if width == 'byte' else 2
+            next_addr = (int(addr) + step) & 0xFFFF
+            try:
+                self._check_bus(next_addr)
+            except RuntimeError as e:
+                # вернуть ровно "BUS ERROR"
+                return "BUS ERROR"
+            if (next_addr & 1) == 0:
+                v = self._mem_read_word(next_addr)
+                # сохраняем новый контекст (слово)
+                self.last_read = ('mem', next_addr, 'word')
+                return f"{v:06o}"
+            else:
+                v = self._mem_read_byte(next_addr)
+                # сохраняем новый контекст (байт)
+                self.last_read = ('mem', next_addr, 'byte')
+                return f"{v:03o}"
+
+        elif kind == 'reg':
+            _, reg_idx = self.last_read
+            next_reg = (int(reg_idx) + 1) % 8
+            val = self.db.get_register_value(next_reg) & 0xFFFF
+            # сохраняем новый контекст как регистр целиком
+            self.last_read = ('reg', next_reg)
+            return f"{val:06o}"
+
+        return None
+    def execute(self, raw_command: str):
+        """
+        Консольный интерфейс процессора.
+        Если raw_command пустая строка -> подаём Line Feed (_line_feed).
+        Возвращаем:
+        - строку с выводом (например "077400" / "002001" / "BUS ERROR")
+        - None для команд, которые не должны печатать ничего
+        """
+        try:
+            # 1) Line Feed (Enter без команды)
+            if raw_command is not None and raw_command.strip() == "":
+                return self._line_feed()
+
+            parsed = self.parser.parse(raw_command)
+
+            # Регистровое чтение
+            if parsed['type'] == 'REG_READ':
+                reg = parsed['reg']  # формат "R1"
+                reg_idx = int(reg[1:])
+                value = self.get_register(reg)
+                # сохраняем контекст: регистровое чтение
+                self.last_read = ('reg', reg_idx)
+                return f"{value:06o}"
+
+            # Регистровая запись
+            if parsed['type'] == 'REG_WRITE':
+                val = int(parsed['value'], 8)
+                self.set_register(parsed['reg'], val)
+                self.last_read = None
+                return None
+
+            # Чтение памяти
+            if parsed['type'] == 'MEM_READ':
+                addr = int(parsed['addr'], 8)
+                # проверка шины
+                try:
+                    self._check_bus(addr)
+                except RuntimeError as e:
+                    return "BUS ERROR"
+
+                if (addr & 1) == 0:
+                    v = self._mem_read_word(addr)
+                    self.last_read = ('mem', addr, 'word')
+                    return f"{v:06o}"
+                else:
+                    v = self._mem_read_byte(addr)
+                    self.last_read = ('mem', addr, 'byte')
+                    return f"{v:03o}"
+
+            # Запись памяти
+            if parsed['type'] == 'MEM_WRITE':
+                addr = int(parsed['addr'], 8)
+                try:
+                    self._check_bus(addr)
+                except RuntimeError:
+                    return "BUS ERROR"
+
+                sval = parsed['value']
+                ival = int(sval, 8)
+
+                if sval == '0':
+                    self._mem_write_word(addr & ~1, 0)
+                else:
+                    if (addr & 1) == 0:
+                        self._mem_write_word(addr, ival)
+                    else:
+                        # в режиме, где мы решили: запись по нечётному адресу -> записать слово в базовый чётный адрес
+                        # если ты настаиваешь на варианте "всегда слово" — замени вызов set_byte на set_word ниже
+                        # здесь оставим корректную байтовую запись:
+                        self._mem_write_byte(addr, ival & 0xFF)
+
+                self.last_read = None
+                return None
+
+            # EXECUTE / запуск
+            if parsed['type'] == 'EXEC_AT':
+                addr = int(parsed['addr'], 8)
+                try:
+                    self._check_bus(addr)
+                except RuntimeError:
+                    return "BUS ERROR"
+                self._set_pc(addr)
+                self.last_read = None
+                return self._run_program()
+
+            if parsed['type'] == 'QUIT':
+                return "QUIT"
+
+            return "Неизвестная команда"
+
+        except Exception as e:
+            # Если это наш BUS ERROR — вернуть именно "BUS ERROR"
+            msg = str(e)
+            if msg == "BUS ERROR":
+                return "BUS ERROR"
+            return f"Ошибка: {msg}"
     # ---------- Регистры ----------
     def get_register(self, reg_name: str) -> int:
         reg_num = int(reg_name[1:])
@@ -66,243 +174,302 @@ class CPU:
         self.db.set_register_value(reg_num, int(value) & 0xFFFF)
 
     def _get_pc(self) -> int:
-        return self.get_register('R7')
+        return self.get_register("R7")
 
     def _set_pc(self, value: int):
-        self.set_register('R7', int(value) & 0xFFFF)
+        self.set_register("R7", int(value) & 0xFFFF)
 
-    # ---------- Команды консоли ----------
+    # ---------- Консольные команды ----------
     def execute(self, raw_command: str):
         try:
+            if raw_command.strip() == "":
+                # Line Feed
+                if not self.last_read:
+                    return None
+                kind, obj = self.last_read
+                if kind == "reg":
+                    value = self.get_register(obj)
+                    return f"{value:06o}"
+                elif kind == "mem":
+                    addr = obj + 2
+                    try:
+                        self._check_bus(addr)
+                    except RuntimeError as e:
+                        return str(e)
+                    v = self._mem_read_word(addr)
+                    self.last_read = ("mem", addr)
+                    return f"{v:06o}"
+
             parsed = self.parser.parse(raw_command)
 
             if parsed['type'] == 'REG_READ':
-                value = self.get_register(parsed['reg'])
+                reg = parsed['reg']
+                value = self.get_register(reg)
+                self.last_read = ('reg', reg)
                 return f"{value:06o}"
 
-            elif parsed['type'] == 'REG_WRITE':
+            if parsed['type'] == 'REG_WRITE':
                 val = int(parsed['value'], 8)
                 self.set_register(parsed['reg'], val)
+                self.last_read = None
                 return None
 
-            elif parsed['type'] == 'MEM_READ':
-                addr_dec = int(parsed['addr'], 8)
-                val = self._mem_read_word(addr_dec)
-                return f"{val:06o}"
-
-            elif parsed['type'] == 'MEM_WRITE':
-                addr_dec = int(parsed['addr'], 8)
-                sval = parsed['value']
-                if sval == '0':
-                    self._mem_write_word(addr_dec, 0)
+            if parsed['type'] == 'MEM_READ':
+                addr = int(parsed['addr'], 8)
+                self._check_bus(addr)
+                if (addr & 1) == 0:
+                    v = self._mem_read_word(addr)
+                    self.last_read = ('mem', addr)
+                    return f"{v:06o}"
                 else:
-                    iv = int(sval, 8)
-                    self._mem_write_word(addr_dec, iv)
+                    v = self._mem_read_byte(addr)
+                    self.last_read = ('mem', addr)
+                    return f"{v:03o}"
+
+            if parsed['type'] == 'MEM_WRITE':
+                addr = int(parsed['addr'], 8)
+                self._check_bus(addr)
+                sval = parsed['value']
+                ival = int(sval, 8)
+
+                if sval == '0':
+                    self._mem_write_word(addr & ~1, 0)
+                else:
+                    if (addr & 1) == 0:
+                        self._mem_write_word(addr, ival)
+                    else:
+                        self._mem_write_byte(addr, ival & 0xFF)
+
+                self.last_read = None
                 return None
 
-            elif parsed['type'] == 'EXEC_AT':
-                start_addr = int(parsed['addr'], 8)
-                self._set_pc(start_addr)
-                self._run_program()
-                return None
+            if parsed['type'] == 'EXEC_AT':
+                addr = int(parsed['addr'], 8)
+                self._check_bus(addr)
+                self._set_pc(addr)
+                self.last_read = None
+                return self._run_program()
 
-            elif parsed['type'] == 'QUIT':
+            if parsed['type'] == 'QUIT':
                 return "QUIT"
 
             return "Неизвестная команда"
         except Exception as e:
-            return f"Ошибка: {str(e)}"
+            return f"Ошибка: {e}"
 
     # ---------- Исполнение программы ----------
     def _run_program(self):
-        out_lines = []
+        out = []
         pc = self._get_pc()
 
         while True:
-            word_str = self._raw_mem_fetch(pc)
-
+            raw = self._raw_mem_fetch(pc)  
             try:
-                word_val = int(word_str, 8)  # октальное → int
+                wval = int(raw, 8)
             except ValueError:
-                out_lines.append(f"{pc:o}: Неверные данные в памяти: {word_str}")
+                out.append(f"{pc:06o}: Ошибка: некорректное слово {raw}")
                 break
 
-            if word_val == 0:
-                out_lines.append(f"Программа завершена по адресу {pc:o}")
+            if wval == 0:
+                # HALT
                 self._set_pc((pc + 2) & 0xFFFF)
                 break
 
-            # ---------- новый декодер ----------
-            opcode   = (word_val >> 12) & 0o17
-            src_mode = (word_val >> 9) & 0o7
-            src_reg  = (word_val >> 6) & 0o7
-            dst_mode = (word_val >> 3) & 0o7
-            dst_reg  = word_val & 0o7
-
-            # вызываем обработчик
             try:
-                text, extra_words = self.opcodes.execute(
-                    opcode=opcode,
-                    src_mode=src_mode,
-                    src_reg=src_reg,
-                    dst_mode=dst_mode,
-                    dst_reg=dst_reg,
-                    pc=pc,
-                    raw_word=word_val
-                )
-                if text:
-                    out_lines.append(f"{pc:o}: {text}")
-            except StopIteration:
-                out_lines.append(f"Программа завершена по адресу {pc:o}")
-                self._set_pc((pc + 2) & 0xFFFF)
-                break
+                text, extra_words = self.op.execute(pc=pc, raw_word=raw)
+                if self.debug:
+                    out.append(f"{pc:06o}: {text}")
             except Exception as e:
-                out_lines.append(f"{pc:o}: Ошибка при исполнении: {e}")
+                out.append(f"{pc:06o}: Ошибка: {e}")
                 extra_words = 0
 
-            # шаг PC
             pc = (pc + 2 + (extra_words * 2)) & 0xFFFF
             self._set_pc(pc)
 
-        return "\n".join(out_lines)
+        return "\n".join(out) if out else ""
 
-
-    # ---------- Нормализация строк/чисел ----------
+    # ---------- Нормализация ----------
     def _raw_mem_fetch(self, addr: int) -> str:
-        phys = self._map_addr(addr)
-        s = self.db.get_memory_value(phys)
-        if s == '0':
-            return '000000'
-        return s.zfill(6)
+        base = int(addr) & ~1
+        phys = self._map_addr(base, for_code=True)
+        hi, lo = self.db.get_memory_bytes(phys)  # returns ints 0..255
+        word = ((hi << 8) | lo) & 0xFFFF
+        if self.debug:
+            print(f"[DBG FETCH] logical {base:o} -> phys {phys:o} : {word:06o} (hi={hi:03o} lo={lo:03o})")
+        return f"{word:06o}"
+
+
 
     def _oct_to_int(self, s):
         if s is None:
             return 0
         ss = str(s).strip()
-        if ss == '0' or ss == '':
+        if ss == "0" or ss == "":
             return 0
         return int(ss, 8)
 
     def _int_to_oct6(self, v):
         return f"{int(v) & 0xFFFF:06o}"
 
-    # ---------- Отображение низкой страницы ----------
-    def _map_addr(self, addr: int) -> int:
-        addr = int(addr) & 0xFFFF
-        if 0 <= addr <= 0o1777:
-            return self._lowpage_base + addr
-        self.db.validate_address(addr)
-        return addr
+    # ---------- Отображение адресов ----------
+    def _map_addr(self, addr: int, *, for_code: bool = False) -> int:
+        return int(addr) & 0xFFFF
 
-        # ---------- Память: слово/байт ----------
+
+
+    # ---------- Память ----------
     def _mem_read_word(self, addr: int) -> int:
-        base = addr & ~1
+        base = int(addr) & ~1
         phys = self._map_addr(base)
-        return self.db.get_word(phys) & 0xFFFF
+        hi, lo = self.db.get_memory_bytes(phys)
+        val = ((hi << 8) | lo) & 0xFFFF
+        if self.debug:
+            print(f"[DBG READ ] logical {base:o} -> phys {phys:o} : {val:06o} (hi={hi:03o} lo={lo:03o})")
+        return val
 
-    def _mem_write_word(self, addr: int, val: int):
-        base = addr & ~1
+    def _mem_write_word(self, addr: int, value: int):
+        base = int(addr) & ~1
         phys = self._map_addr(base)
-        self.db.set_word(phys, int(val) & 0xFFFF)
+        v = int(value) & 0xFFFF
+        hi = (v >> 8) & 0xFF
+        lo = v & 0xFF
+        if self.debug:
+            print(f"[DBG WRITE] logical {base:o} -> phys {phys:o} : {v:06o} (hi={hi:03o} lo={lo:03o})")
+        self.db.set_memory_bytes(phys, hi, lo)
 
     def _mem_read_byte(self, addr: int) -> int:
-        phys = self._map_addr(addr)
-        return self.db.get_byte(phys) & 0xFF
+        a = int(addr) & 0xFFFF
+        base = a & ~1
+        w = self._mem_read_word(base)
+        return ((w >> 8) & 0xFF) if (a & 1) else (w & 0xFF)
 
-    def _mem_write_byte(self, addr: int, b: int):
-        phys = self._map_addr(addr)
-        self.db.set_byte(phys, int(b) & 0xFF)
+    def _mem_write_byte(self, addr: int, val: int):
+        a = int(addr) & 0xFFFF
+        base = a & ~1
+        cur = self._mem_read_word(base)
+        if a & 1:
+            new = ((int(val) & 0xFF) << 8) | (cur & 0x00FF)
+        else:
+            new = (cur & 0xFF00) | (int(val) & 0xFF)
+        # dbg
+        if self.debug:
+            phys = self._map_addr(base)
+            print(f"[DBG WRITE-B] logical {a:o} -> phys {phys:o} : byte {int(val)&0xFF:03o}, old_word={cur:06o} -> new_word={new:06o}")
+        self._mem_write_word(base, new)
+
+
 
 
     # ---------- Адресация ----------
-    def resolve_operand(self, is_word: bool, mode: int, reg: int, pc: int, as_dest: bool):
-        step = 2 if is_word else 1
-        print(f"[DEBUG] resolve_operand вызван: mode={mode}, reg={reg}, is_word={is_word}, as_dest={as_dest}")
-        def read(addr):
-            return self.mem.get_word(addr) if is_word else self.mem.get_byte(addr)
+    def resolve_operand(self, *, is_word: bool, mode: int, reg: int, pc: int, as_dest: bool = False):
+        """
+        Режимы адресации для Сфера-36 (PDP-11 подобные).
+        Возвращает:
+          value, write_back_fn, extra_words, effective_address
+        """
 
-        def write(addr, val):
+        data_step = 2 if is_word else 1  # шаг для данных
+        ptr_step = 2                     # шаг для указателей (в deferred режимах)
+        reg_name = f"R{reg}"
+
+        # ----------------- helpers -----------------
+        def read_ea(addr: int) -> int:
+            return self._mem_read_word(addr) if is_word else self._mem_read_byte(addr)
+
+        def write_ea(addr: int, v: int):
             if is_word:
-                self.mem.set_word(addr, val)
+                self._mem_write_word(addr, v & 0xFFFF)
             else:
-                self.mem.set_byte(addr, val)
+                self._mem_write_byte(addr, v & 0xFF)
 
-        # mode 0: Rn
+        # ----------------- mode 0: R -----------------
         if mode == 0:
-            val = self.regs[reg]
-            if not is_word:
-                val &= 0xFF
-            def store(v):
-                if is_word:
-                    self.regs[reg] = v
-                else:
-                    old = self.regs[reg]
-                    self.regs[reg] = (old & 0xFF00) | (v & 0xFF)
-            return val, store if as_dest else None
+            cur = self.get_register(reg_name) & 0xFFFF
+            if is_word:
+                def wb_word(v):
+                    self.set_register(reg_name, int(v) & 0xFFFF)
+                return cur, (wb_word if as_dest else None), 0, None
+            else:
+                lo = cur & 0xFF
+                def wb_byte(v):
+                    hi = (cur >> 8) & 0xFF
+                    nv = ((hi << 8) | (int(v) & 0xFF)) & 0xFFFF
+                    self.set_register(reg_name, nv)
+                return lo, (wb_byte if as_dest else None), 0, None
 
-        # mode 1: (Rn)
+        # ----------------- mode 1: @R -----------------
         if mode == 1:
-            addr = self.regs[reg]
-            val = read(addr)
-            return val, (lambda v: write(addr, v)) if as_dest else None
+            ea = self.get_register(reg_name) & 0xFFFF
+            val = read_ea(ea)
+            wb = (lambda v, a=ea: write_ea(a, v)) if as_dest else None
+            return val, wb, 0, ea
 
-        # mode 2: (Rn)+
-        if mode == 2:  # (R)+
-            addr = self.registers[reg]
-            val = self.get_word(addr) if is_word else self.get_byte(addr)
-            self.registers[reg] += step
-            def store(v):
-                if is_word:
-                    self.set_word(addr, v)
-                else:
-                    self.set_byte(addr, v)
-            return val, (store if as_dest else None), 0
+        # ----------------- mode 2: (R)+ / #imm -----------------
+        if mode == 2:
+            if reg == 7:  # PC = immediate
+                imm = self._mem_read_word((pc + 2) & 0xFFFF)
+                if as_dest:
+                    raise ValueError("Immediate cannot be destination")
+                return (imm if is_word else (imm & 0xFF)), None, 1, None
 
-        # mode 3: @(Rn)+
+            ea = self.get_register(reg_name) & 0xFFFF
+            val = read_ea(ea)
+            self.set_register(reg_name, (ea + data_step) & 0xFFFF)
+            wb = (lambda v, a=ea: write_ea(a, v)) if as_dest else None
+            return val, wb, 0, ea
+
+        # ---------- MODE 3: @(Rn)+ OR @#abs if Rn==7 ----------
         if mode == 3:
-            ptr = self.regs[reg]
-            ea = self.mem.get_word(ptr)
-            self.regs[reg] = (ptr + 2) & 0xFFFF
-            val = read(ea)
-            return val, (lambda v: write(ea, v)) if as_dest else None
+            if reg == 7:
+                abs_addr = self._mem_read_word((pc + 2) & 0xFFFF)
+                val = read_ea(abs_addr)
+                wb = (lambda v, a=abs_addr: write_ea(a, v)) if as_dest else None
+                return val, wb, 1, abs_addr
 
-        # mode 4: -(Rn)
+            ptr_addr = self.get_register(reg_name) & 0xFFFF
+            ea = self._mem_read_word(ptr_addr)   # слово-указатель
+            self.set_register(reg_name, (ptr_addr + ptr_step) & 0xFFFF)  # автоинкремент
+            val = read_ea(ea)  # читаем ОПЕРАНД по адресу, хранящемуся в указателе
+            wb = (lambda v, a=ea: write_ea(a, v)) if as_dest else None
+            return val, wb, 0, ea
+
+
+        # ----------------- mode 4: -(R) -----------------
         if mode == 4:
-            self.registers[reg] -= step
-            addr = self.registers[reg]
-            val = self.get_word(addr) if is_word else self.get_byte(addr)
-            def store(v):
-                if is_word:
-                    self.set_word(addr, v)
-                else:
-                    self.set_byte(addr, v)
-            return val, (store if as_dest else None), 0
+            new_addr = (self.get_register(reg_name) - data_step) & 0xFFFF
+            self.set_register(reg_name, new_addr)
+            val = read_ea(new_addr)
+            wb = (lambda v, a=new_addr: write_ea(a, v)) if as_dest else None
+            return val, wb, 0, new_addr
 
-        # mode 5: @-(Rn)
+        # ----------------- mode 5: @-(R) -----------------
         if mode == 5:
-            new_addr = (self.regs[reg] - 2) & 0xFFFF
-            self.regs[reg] = new_addr
-            ea = self.mem.get_word(new_addr)
-            val = read(ea)
-            return val, (lambda v: write(ea, v)) if as_dest else None
+            new_addr = (self.get_register(reg_name) - ptr_step) & 0xFFFF
+            self.set_register(reg_name, new_addr)
+            ea = self._mem_read_word(new_addr)
+            val = read_ea(ea)
+            wb = (lambda v, a=ea: write_ea(a, v)) if as_dest else None
+            return val, wb, 0, ea
 
-        # mode 6: X(Rn)
+        # ----------------- mode 6: X(R) / PC-rel -----------------
         if mode == 6:
-            disp = self.mem.get_word(self.regs[7])
-            self.regs[7] = (self.regs[7] + 2) & 0xFFFF
-            base = self.regs[reg]
+            disp = self._mem_read_word((pc + 2) & 0xFFFF)
+            base = (self.get_register(reg_name) if reg != 7 else (pc + 2)) & 0xFFFF
             ea = (base + disp) & 0xFFFF
-            val = read(ea)
-            return val, (lambda v: write(ea, v)) if as_dest else None
+            val = read_ea(ea)
+            wb = (lambda v, a=ea: write_ea(a, v)) if as_dest else None
+            return val, wb, 1, ea
 
-        # mode 7: @X(Rn)
+        # ----------------- mode 7: @X(R) / PC-rel deferred -----------------
         if mode == 7:
-            disp = self.mem.get_word(self.regs[7])
-            self.regs[7] = (self.regs[7] + 2) & 0xFFFF
-            base = self.regs[reg]
+            disp = self._mem_read_word((pc + 2) & 0xFFFF)
+            base = (self.get_register(reg_name) if reg != 7 else (pc + 2)) & 0xFFFF
             ptr = (base + disp) & 0xFFFF
-            ea = self.mem.get_word(ptr)
-            val = read(ea)
-            return val, (lambda v: write(ea, v)) if as_dest else None
+            ea = self._mem_read_word(ptr)
+            val = read_ea(ea)
+            wb = (lambda v, a=ea: write_ea(a, v)) if as_dest else None
+            return val, wb, 1, ea
 
-        raise ValueError(f"Неизвестный режим адресации {mode}, R{reg}")
+        raise ValueError(f"Unknown addressing mode: {mode} for R{reg}")
+
+

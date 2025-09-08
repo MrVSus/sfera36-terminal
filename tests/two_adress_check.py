@@ -2,40 +2,36 @@ import sys
 from pathlib import Path
 # Путь на один уровень выше папки tests
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
-
-from core.processor import CPU
 from data.database import DatabaseManager
+from core.processor import CPU
 
-def run_script(script_lines):
-    db = DatabaseManager()
-    cpu = CPU(db_manager=db)
+def octs(s): return int(s, 8)
 
-    for line in script_lines:
-        line = line.strip()
-        if not line or line.startswith("#"):
-            continue  # комментарии и пустые строки пропускаем
+def setup_cpu():
+    db = DatabaseManager(db_path=":memory:", debug=False)
+    cpu = CPU(db_manager=db, db_debug=False, debug=True)
+    return cpu
 
-        # Чтобы поддержать формат "1000 / 005350" с пробелами
-        line = line.replace(" / ", "/").replace(" G ", "G").replace(" /", "/")
-
-        output = cpu.execute(line)
-        if output:
-            print(output)
-
-script = """
-     
-1000  / 112142 
-1002 / 0 
-R1 / 2001    
-2000 / 005177  
-R2 / 3003 
-3002 / 055177  
-1000 G  
-R1 / 
-2000 /  
-R2 /     
-3002 / 
-"""
+def run_scenario():
+    cpu = setup_cpu()
+    # initialize memory & registers (addresses in octal strings)
+    cpu.execute("1000 / 112142")   # instruction word
+    cpu.execute("1002 / 0")        # halt marker
+    cpu.execute("R1 / 2002")
+    cpu.execute("2003 / 005177")
+    cpu.execute("R2 / 3003")
+    cpu.execute("3002 / 055177")
+    # run
+    out = cpu.execute("1000 G")
+    print("Run output:")
+    print(out)
+    print("After run:")
+    print("R1:", cpu.execute("R1 /"))
+    print("2002:", cpu.execute("2002 /"))
+    print("2003:", cpu.execute("2003 /"))
+    print("R2:", cpu.execute("R2 /"))
+    print("3002:", cpu.execute("3002 /"))
+    print("3003:", cpu.execute("3003 /"))
 
 if __name__ == "__main__":
-    run_script(script.strip().splitlines())
+    run_scenario()
