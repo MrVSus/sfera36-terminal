@@ -1,9 +1,9 @@
-from PySide6.QtWidgets import (
+from PySide2.QtWidgets import (
     QWidget, QVBoxLayout, QPlainTextEdit, QPushButton,
     QHBoxLayout, QLineEdit
 )
-from PySide6.QtGui import QFont, QTextCursor, QTextOption
-from PySide6.QtCore import Qt
+from PySide2.QtGui import QFont, QTextCursor, QTextOption
+from PySide2.QtCore import Qt
 
 
 class TerminalPage(QWidget):

@@ -1,12 +1,13 @@
-
+# data/database.py
 import sqlite3
 from pathlib import Path
-from typing import Tuple
+from typing import Tuple, Optional
+
 
 class DatabaseManager:
     MIN_ADDR = 0o1000
 
-    def __init__(self, db_path: str | None = None, debug: bool = False):
+    def __init__(self, db_path: Optional[str] = None, debug: bool = False):
         default = str(Path(__file__).parent.parent / 'data' / 'migrations' / 'db.db')
         self.db_path = db_path or default
         self.debug = debug
@@ -67,6 +68,7 @@ class DatabaseManager:
             if self.debug:
                 print(f"[DatabaseManager] Initialized lowpage {base:o}..{end:o}")
 
+    # helpers
     @staticmethod
     def _to_bin8(v: int) -> str:
         return f"{v & 0xFF:08b}"
@@ -91,6 +93,7 @@ class DatabaseManager:
         if not (0 <= a <= 0xFFFF):
             raise ValueError("Address out of range")
 
+    # registers
     def get_register_value(self, reg_num: int) -> int:
         cur = self.conn.cursor()
         cur.execute("SELECT value FROM registers WHERE reg=?;", (int(reg_num),))
@@ -106,30 +109,7 @@ class DatabaseManager:
         )
         self.conn.commit()
 
-    def get_memory_row(self, addr_even: int) -> dict | None:
-
-        a = int(addr_even) & ~1
-        self.validate_address(a)
-        cur = self.conn.cursor()
-        cur.execute("SELECT hi, lo FROM memory_bytes WHERE addr_even=?;", (a,))
-        row = cur.fetchone()
-        if row:
-            return {"hi": row["hi"], "lo": row["lo"]}
-        return None
-
-    def set_memory_row(self, addr_even: int, hi: str, lo: str):
-
-        a = int(addr_even) & ~1
-        self.validate_address(a)
-        if len(hi) != 8 or len(lo) != 8:
-            raise ValueError("hi/lo must be 8-bit binary strings")
-        self._ensure_row(a)
-        self.conn.execute(
-            "UPDATE memory_bytes SET hi=?, lo=? WHERE addr_even=?;",
-            (hi, lo, a)
-        )
-        self.conn.commit()
-
+    # low-level memory
     def _ensure_row(self, addr_even: int):
         a = int(addr_even) & ~1
         cur = self.conn.cursor()
@@ -183,17 +163,10 @@ class DatabaseManager:
             lo = int(value) & 0xFF
         self.set_memory_bytes(base, hi, lo)
 
-
+    # compatibility
     def get_memory_value(self, addr_even: int) -> str:
         return self._oct6(self.get_word(addr_even))
 
-    def set_memory_value(self, addr: int, sval: str):
+    def set_memory_value(self, addr_even: int, sval: str):
         v = self._parse_oct6(sval)
-
-        if (addr & 1) == 0:
-            # запись слова
-            self.set_word(addr, v)
-        else:
-            # запись байта (только младшие 8 бит)
-            self.set_byte(addr, v & 0xFF)
-
+        self.set_word(addr_even, v)

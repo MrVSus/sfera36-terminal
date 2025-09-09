@@ -1,7 +1,12 @@
-from PySide6.QtWidgets import QApplication, QMainWindow
+from PySide2.QtWidgets import QApplication, QMainWindow
 from core.processor import CPU
 from ui.pages.terminal_window import TerminalPage
 
+import os, sys
+from PySide2 import QtCore
+
+plugin_path = os.path.join(os.path.dirname(QtCore.__file__), "plugins", "platforms")
+os.environ["QT_QPA_PLATFORM_PLUGIN_PATH"] = plugin_path
 
 class MainWindow(QMainWindow):
     def __init__(self):
@@ -15,7 +20,8 @@ class MainWindow(QMainWindow):
 
 
 if __name__ == "__main__":
-    app = QApplication([])
+    app = QApplication(sys.argv)
     window = MainWindow()
     window.show()
-    app.exec()
+    sys.exit(app.exec_())
+

@@ -1,5 +1,12 @@
-PySide6>=6.6.0
+
 panda3d>=1.10.15
-pyinstaller>=6.14.2
+# для Win10/11
+PySide6
+pyinstaller>=5.13
+
+# для Win7
+PySide2
+pyinstaller<=4.10
+
 pytest>=8.4.1
 black>=23.9.1
