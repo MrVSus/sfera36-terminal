@@ -1,2 +1,2 @@
-build/win10_spec
-dist
+/build/win10_spec
+/dist
