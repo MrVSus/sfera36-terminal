@@ -1,17 +1,17 @@
-
-
 class CommandHandlers:
 
     def __init__(self, cpu):
         self.cpu = cpu
-
-     
         self._one = {
             '050': self.op_clr,
             '051': self.op_com,
             '052': self.op_inc,
             '053': self.op_dec,
             '054': self.op_neg,
+            '057': self.op_tst,
+            '1067': self.op_mfps,   
+            '1064': self.op_mtps,   
+
         }
 
     
@@ -214,3 +214,34 @@ class CommandHandlers:
         self.cpu.flags.Z = 1 if res == 0 else 0
         self.cpu.flags.C = 1 if d_val < s_val else 0
         return "SUB", s_ex + d_ex
+       # -----------TST/TSTB---------
+    def op_tst(self, pc, wb_flag, mode, reg, raw):
+        is_word = (wb_flag == '0')
+        val, _, extra, _ = self.cpu.resolve_operand(
+            is_word=is_word, mode=mode, reg=reg, pc=pc
+        )
+
+        if is_word:
+            self.cpu.flags.N = 1 if (val & 0x8000) else 0
+            self.cpu.flags.Z = 1 if val == 0 else 0
+        else:
+            self.cpu.flags.N = 1 if (val & 0x80) else 0
+            self.cpu.flags.Z = 1 if (val & 0xFF) == 0 else 0
+
+        self.cpu.flags.V = 0
+        self.cpu.flags.C = 0
+
+        return ("TST" if is_word else "TSTB"), extra
+
+
+    def op_mfps(self, pc, wb_flag, mode, reg, raw):
+        regname = f"R{reg}"
+        psw = self.cpu.db.get_psw() & 0xFF
+        self.cpu.set_register(regname, psw)
+        return f"MFPS {regname}", 0
+
+    def op_mtps(self, pc, wb_flag, mode, reg, raw):
+        regname = f"R{reg}"
+        psw_val = self.cpu.get_register(regname) & 0xFF
+        self.cpu.db.set_psw(psw_val)
+        return f"MTPS {regname}", 0

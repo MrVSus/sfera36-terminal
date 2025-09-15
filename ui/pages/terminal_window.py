@@ -143,6 +143,11 @@ class TerminalPage(QWidget):
             self.last_addr = None
             self.last_reg = None
             return
+        # чтение ССП
+        if cmd == "RS/":
+            value = self.cpu.db.get_psw()
+            self._append_output(f"{value:03o}")  # младший байт в восьмеричном
+            return
 
         self._append_command("Неизвестная команда")
 

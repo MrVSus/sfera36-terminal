@@ -57,6 +57,8 @@ class CPU:
             return f"{val:06o}"
 
         return None
+    # Вставьте/замените метод CPU.execute в core/processor.py на этот
+
     def execute(self, raw_command: str):
         try:
             if raw_command is not None and raw_command.strip() == "":
@@ -64,6 +66,7 @@ class CPU:
 
             parsed = self.parser.parse(raw_command)
 
+            # ---------- Регистры ----------
             if parsed['type'] == 'REG_READ':
                 reg = parsed['reg']  # формат "R1"
                 reg_idx = int(reg[1:])
@@ -77,11 +80,12 @@ class CPU:
                 self.last_read = None
                 return None
 
+            # ---------- Память ----------
             if parsed['type'] == 'MEM_READ':
                 addr = int(parsed['addr'], 8)
                 try:
                     self._check_bus(addr)
-                except RuntimeError as e:
+                except RuntimeError:
                     return "BUS ERROR"
 
                 if (addr & 1) == 0:
@@ -114,7 +118,19 @@ class CPU:
                 self.last_read = None
                 return None
 
-            # EXECUTE / запуск
+            # ---------- PSW ----------
+            if parsed['type'] == 'PSW_READ':
+                psw = self.db.get_psw()
+                self.last_read = ('psw',)
+                return f"{psw:03o}"
+
+            if parsed['type'] == 'PSW_WRITE':
+                val = int(parsed['value'], 8) & 0xFF
+                self.db.set_psw(val)
+                self.last_read = None
+                return None
+
+            # ---------- Запуск ----------
             if parsed['type'] == 'EXEC_AT':
                 addr = int(parsed['addr'], 8)
                 try:
@@ -125,10 +141,12 @@ class CPU:
                 self.last_read = None
                 return self._run_program()
 
+            # ---------- Завершение ----------
             if parsed['type'] == 'QUIT':
                 return "QUIT"
 
-            return "Неизвестная команда"
+            return "Ошибка:Неизвестная команда"
+
 
         except Exception as e:
             msg = str(e)
@@ -326,7 +344,18 @@ class CPU:
             print(f"[DBG WRITE-B] logical {a:o} -> phys {phys:o} : byte {int(val)&0xFF:03o}, old_word={cur:06o} -> new_word={new:06o}")
         self._mem_write_word(base, new)
 
+    def _set_flag(self, flag: str, value: int):
+        mask = {"C":1, "V":2, "Z":4, "N":8, "T":16}[flag]
+        psw = self.db.get_psw()
+        if value:
+            psw |= mask
+        else:
+            psw &= ~mask
+        self.db.set_psw(psw)
 
+    def _get_flag(self, flag: str) -> int:
+        mask = {"C":1, "V":2, "Z":4, "N":8, "T":16}[flag]
+        return 1 if (self.db.get_psw() & mask) else 0
 
 
     # ---------- Адресация ----------
@@ -375,11 +404,21 @@ class CPU:
 
         # ----------------- mode 2: (R)+ / #imm -----------------
         if mode == 2:
-            if reg == 7:  # PC = immediate
-                imm = self._mem_read_word((pc + 2) & 0xFFFF)
+            if reg == 7:
+                # immediate — слово находится в потоке команды по адресу (pc + 2)
+                imm_addr = (pc + 2) & 0xFFFF
+                imm = self._mem_read_word(imm_addr)
+
                 if as_dest:
-                    raise ValueError("Immediate cannot be destination")
-                return (imm if is_word else (imm & 0xFF)), None, 1, None
+                    val = imm if is_word else (imm & 0xFF)
+                    def wb(v, a=imm_addr):
+
+                        write_ea(a, v)
+
+                    return val, wb, 1, imm_addr
+
+                val = imm if is_word else (imm & 0xFF)
+                return val, None, 1, None
 
             ea = self.get_register(reg_name) & 0xFFFF
             val = read_ea(ea)

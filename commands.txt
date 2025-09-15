@@ -20,10 +20,10 @@ pyside6-uic ui/pages/main_window.ui -o ui/ui_modules/ui_main_window.py - Пре�
 find ui/pages -name "*.ui" | xargs -I {} pyside6-uic {} -o ui/ui_modules/ui_{}.py
 
 ___BUILD___
-# Сборка в .exe (Windows)
-pyinstaller main.py --onefile --windowed --icon=assets/icon.ico - Создание portable-версии
-# Сборка в .app (macOS)
-pyinstaller main.py --onefile --windowed --name "Sfera36Terminal"
+# Сборка в .exe (Windows10)
+python build/build.py win10
+# Сборка в .exe (Windows7)
+python build/build.py win7
 # Запуск в режиме разработки
 python main.py - Запуск приложения без сборки
 

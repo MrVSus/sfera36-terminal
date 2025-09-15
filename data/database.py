@@ -20,7 +20,7 @@ class DatabaseManager:
         self._ensure_schema()
         self._ensure_registers()
         self._ensure_lowpage()
-
+        self._ensure_psw()
         if need_init and self.debug:
             print("[DatabaseManager] created DB at", self.db_path)
 
@@ -50,7 +50,7 @@ class DatabaseManager:
                 (r, 0)
             )
         self.conn.commit()
-
+    
     def _ensure_lowpage(self):
         base = int(self.MIN_ADDR)
         end = base + int(0o1777)
@@ -196,4 +196,29 @@ class DatabaseManager:
         else:
             # запись байта (только младшие 8 бит)
             self.set_byte(addr, v & 0xFF)
+            
+    def _ensure_psw(self):
+        cur = self.conn.cursor()
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS processor_state(
+                id INTEGER PRIMARY KEY CHECK(id=0),
+                psw INTEGER NOT NULL CHECK(psw BETWEEN 0 AND 255)
+            );
+        """)
+        cur.execute(
+            "INSERT INTO processor_state(id, psw) VALUES(0, 0) "
+            "ON CONFLICT(id) DO UPDATE SET psw=COALESCE(processor_state.psw, excluded.psw);"
+        )
+        self.conn.commit()
+
+    def get_psw(self) -> int:
+        cur = self.conn.cursor()
+        cur.execute("SELECT psw FROM processor_state WHERE id=0;")
+        row = cur.fetchone()
+        return int(row["psw"]) if row else 0
+
+    def set_psw(self, psw: int):
+        cur = self.conn.cursor()
+        cur.execute("UPDATE processor_state SET psw=? WHERE id=0;", (int(psw) & 0xFF,))
+        self.conn.commit()
 

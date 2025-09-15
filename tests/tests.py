@@ -28,15 +28,11 @@ def run_script(script_lines):
 
 # Пример сценария из лекции
 script = """
-    1000/005062
-    1002/500
-    1004/0
-    R2/1500
-    2200/123
-    1000G
-    2200/
-    R2/
-    R3/
+    1000 / 005702 
+    1002 / 0 
+    R2 / 2002 
+    1000 G 
+    RS/
 """
 if __name__ == "__main__":
     run_script(script.strip().splitlines())
