@@ -1,19 +1,18 @@
-# build/win10_spec.spec
 # -*- mode: python ; coding: utf-8 -*-
 
 from PyInstaller.utils.hooks import collect_data_files
 
 block_cipher = None
 
-# Забираем ресурсы (qt-плагины, шрифты и т.п.)
+# Ресурсы для PySide2
 datas = collect_data_files("PySide2")
 
-# Минимально необходимые импорты
+# Импорты для PySide2
 hiddenimports = [
     "PySide2.QtCore",
     "PySide2.QtGui",
     "PySide2.QtWidgets",
-    "shiboken6"
+    "shiboken2"
 ]
 
 a = Analysis(

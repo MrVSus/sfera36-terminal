@@ -16,12 +16,20 @@ def main():
         print("Unknown target. Use win7 or win10")
         sys.exit(1)
 
-    spec_path = os.path.join(os.path.dirname(__file__), spec_file)
-    PyInstaller.__main__.run([
+    # Путь до spec
+    spec_path = os.path.abspath(os.path.join(os.path.dirname(__file__), spec_file))
+    print("[BUILD] Spec path:", spec_path)
+
+    # Явно вызываем так же, как из командной строки
+    args = [
+        "pyinstaller",         # для имитации sys.argv[0]
         spec_path,
-        "--noconfirm",
-        "--clean"
-    ])
+        "--clean",
+        "--noconfirm"
+    ]
+    print("[BUILD] Running:", " ".join(args))
+
+    PyInstaller.__main__.run(args[1:])  # передаем всё кроме "pyinstaller"
 
 if __name__ == "__main__":
     main()
