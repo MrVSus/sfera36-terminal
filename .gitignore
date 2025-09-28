@@ -1,2 +1,4 @@
-/build/win10_spec
-/dist
+/dist/
+/build/
+/*.exe
+/*.pkg
