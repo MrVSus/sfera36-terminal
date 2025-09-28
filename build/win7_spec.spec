@@ -43,6 +43,10 @@ exe = EXE(
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,
-    upx=True,
-    console=True
+    upx=False,  # отключаем UPX
+    console=False,
+    version='version_info.txt',  
+    manifest='build/app.manifest',     
+    win_private_assemblies=True, 
 )
+

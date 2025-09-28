@@ -1,12 +1,13 @@
 
 import sqlite3
 from pathlib import Path
-from typing import Tuple
+from typing import Tuple, Optional, Union
+
 
 class DatabaseManager:
     MIN_ADDR = 0o1000
 
-    def __init__(self, db_path: str | None = None, debug: bool = False):
+    def __init__(self, db_path: Optional[str] = None, debug: bool = False):
         default = str(Path(__file__).parent.parent / 'data' / 'migrations' / 'db.db')
         self.db_path = db_path or default
         self.debug = debug
@@ -106,7 +107,7 @@ class DatabaseManager:
         )
         self.conn.commit()
 
-    def get_memory_row(self, addr_even: int) -> dict | None:
+    def get_memory_row(self, addr_even: Union[int]) -> None:
 
         a = int(addr_even) & ~1
         self.validate_address(a)
