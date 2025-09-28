@@ -1,2 +1,4 @@
-/build/win7_spec
-/dits
+/dist/
+/build/
+/*.exe
+/*.pkg
