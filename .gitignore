@@ -1,4 +1,4 @@
 /dist/
-/win7_spec
+/build/win7_spec/
 /*.exe
 /*.pkg
