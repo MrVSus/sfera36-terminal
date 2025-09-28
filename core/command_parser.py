@@ -54,4 +54,4 @@ class CommandParser:
         if m:
             return {'type': 'EXEC_AT', 'addr': m.group(1)}
 
-        raise ValueError("Неизвестная команда")
+        raise ValueError("Неизвестная команда 2")
