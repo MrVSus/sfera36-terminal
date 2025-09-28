@@ -57,84 +57,7 @@ class CPU:
             return f"{val:06o}"
 
         return None
-    def execute(self, raw_command: str):
-        try:
-            if raw_command is not None and raw_command.strip() == "":
-                return self._line_feed()
 
-            parsed = self.parser.parse(raw_command)
-
-            if parsed['type'] == 'REG_READ':
-                reg = parsed['reg']  # формат "R1"
-                reg_idx = int(reg[1:])
-                value = self.get_register(reg)
-                self.last_read = ('reg', reg_idx)
-                return f"{value:06o}"
-
-            if parsed['type'] == 'REG_WRITE':
-                val = int(parsed['value'], 8)
-                self.set_register(parsed['reg'], val)
-                self.last_read = None
-                return None
-
-            if parsed['type'] == 'MEM_READ':
-                addr = int(parsed['addr'], 8)
-                try:
-                    self._check_bus(addr)
-                except RuntimeError as e:
-                    return "BUS ERROR"
-
-                if (addr & 1) == 0:
-                    v = self._mem_read_word(addr)
-                    self.last_read = ('mem', addr, 'word')
-                    return f"{v:06o}"
-                else:
-                    v = self._mem_read_byte(addr)
-                    self.last_read = ('mem', addr, 'byte')
-                    return f"{v:03o}"
-
-            if parsed['type'] == 'MEM_WRITE':
-                addr = int(parsed['addr'], 8)
-                try:
-                    self._check_bus(addr)
-                except RuntimeError:
-                    return "BUS ERROR"
-
-                sval = parsed['value']
-                ival = int(sval, 8)
-
-                if sval == '0':
-                    self._mem_write_word(addr & ~1, 0)
-                else:
-                    if (addr & 1) == 0:
-                        self._mem_write_word(addr, ival)
-                    else:
-                        self._mem_write_byte(addr, ival & 0xFF)
-
-                self.last_read = None
-                return None
-
-            # EXECUTE / запуск
-            if parsed['type'] == 'EXEC_AT':
-                addr = int(parsed['addr'], 8)
-                try:
-                    self._check_bus(addr)
-                except RuntimeError:
-                    return "BUS ERROR"
-                self._set_pc(addr)
-                self.last_read = None
-                return self._run_program()
-
-            if parsed['type'] == 'QUIT':
-                return "QUIT"
-
-            return "Неизвестная команда"
-
-        except Exception as e:
-            msg = str(e)
-            if msg == "BUS ERROR":
-                return "BUS ERROR"
-            return f"Ошибка: {msg}"
     # ---------- Регистры ----------
     def get_register(self, reg_name: str) -> int:
         reg_num = int(reg_name[1:])
@@ -150,55 +73,58 @@ class CPU:
     def _set_pc(self, value: int):
         self.set_register("R7", int(value) & 0xFFFF)
 
-    # ---------- Консольные команды ----------
+        # ---------- Консольные команды ----------
     def execute(self, raw_command: str):
         try:
-            if raw_command.strip() == "":
-                if not self.last_read:
-                    return None
-                kind, obj = self.last_read
-                if kind == "reg":
-                    value = self.get_register(obj)
-                    return f"{value:06o}"
-                elif kind == "mem":
-                    addr = obj + 2
-                    try:
-                        self._check_bus(addr)
-                    except RuntimeError as e:
-                        return str(e)
-                    v = self._mem_read_word(addr)
-                    self.last_read = ("mem", addr)
-                    return f"{v:06o}"
+            if raw_command is not None and raw_command.strip() == "":
+                return self._line_feed()
 
             parsed = self.parser.parse(raw_command)
 
+            # ---------- чтение регистра ----------
             if parsed['type'] == 'REG_READ':
                 reg = parsed['reg']
+                reg_idx = int(reg[1:])
                 value = self.get_register(reg)
-                self.last_read = ('reg', reg)
-                return f"{value:06o}"
+                self.last_read = ('reg', reg_idx)
+                return f"{reg}/ {value:06o}"
 
+            # ---------- запись регистра ----------
             if parsed['type'] == 'REG_WRITE':
-                val = int(parsed['value'], 8)
-                self.set_register(parsed['reg'], val)
+                reg = parsed['reg']
+                reg_idx = int(reg[1:])
+                old_val = self.get_register(reg)
+                new_val = int(parsed['value'], 8)
+                self.set_register(reg, new_val)
                 self.last_read = None
-                return None
+                return f"{reg}/{old_val:06o} {new_val:06o}"
 
+            # ---------- чтение памяти ----------
             if parsed['type'] == 'MEM_READ':
                 addr = int(parsed['addr'], 8)
-                self._check_bus(addr)
+                try:
+                    self._check_bus(addr)
+                except RuntimeError:
+                    return "BUS ERROR"
+
                 if (addr & 1) == 0:
                     v = self._mem_read_word(addr)
-                    self.last_read = ('mem', addr)
-                    return f"{v:06o}"
+                    self.last_read = ('mem', addr, 'word')
+                    return f"{addr:06o}/ {v:06o}"
                 else:
                     v = self._mem_read_byte(addr)
-                    self.last_read = ('mem', addr)
-                    return f"{v:03o}"
+                    self.last_read = ('mem', addr, 'byte')
+                    return f"{addr:06o}/ {v:03o}"
 
+            # ---------- запись памяти ----------
             if parsed['type'] == 'MEM_WRITE':
                 addr = int(parsed['addr'], 8)
-                self._check_bus(addr)
+                try:
+                    self._check_bus(addr)
+                except RuntimeError:
+                    return "BUS ERROR"
+
+                old_val = self._mem_read_word(addr & ~1)
                 sval = parsed['value']
                 ival = int(sval, 8)
 
@@ -210,22 +136,46 @@ class CPU:
                     else:
                         self._mem_write_byte(addr, ival & 0xFF)
 
+                new_val = self._mem_read_word(addr & ~1)
                 self.last_read = None
-                return None
+                return f"{addr:06o}/{old_val:06o} {new_val:06o}"
 
+            # ---------- EXECUTE ----------
             if parsed['type'] == 'EXEC_AT':
                 addr = int(parsed['addr'], 8)
-                self._check_bus(addr)
+                try:
+                    self._check_bus(addr)
+                except RuntimeError:
+                    return "BUS ERROR"
                 self._set_pc(addr)
                 self.last_read = None
-                return self._run_program()
+                self._run_program()
+                r7_val = self.get_register("R7")
+                return f"{addr:06o}G {r7_val:06o}"
+
+            # ---------- чтение PSW ----------
+            if parsed['type'] == 'PSW_READ':
+                psw = self.db.get_psw()
+                return f"RS/ {psw:03o}"
+
+            # ---------- запись PSW ----------
+            if parsed['type'] == 'PSW_WRITE':
+                old_val = self.db.get_psw()
+                new_val = int(parsed['value'], 8)
+                self.db.set_psw(new_val)
+                return f"RS/{old_val:03o} {new_val:03o}"
 
             if parsed['type'] == 'QUIT':
                 return "QUIT"
 
-            return "Неизвестная команда"
+            return "Ошибка: Неизвестная команда"
+
         except Exception as e:
-            return f"Ошибка: {e}"
+            msg = str(e)
+            if msg == "BUS ERROR":
+                return "BUS ERROR"
+            return f"Ошибка: {msg}"
+
 
     # ---------- Исполнение программы ----------
     def _run_program(self):
@@ -326,7 +276,18 @@ class CPU:
             print(f"[DBG WRITE-B] logical {a:o} -> phys {phys:o} : byte {int(val)&0xFF:03o}, old_word={cur:06o} -> new_word={new:06o}")
         self._mem_write_word(base, new)
 
+    def _set_flag(self, flag: str, value: int):
+        mask = {"C":1, "V":2, "Z":4, "N":8, "T":16}[flag]
+        psw = self.db.get_psw()
+        if value:
+            psw |= mask
+        else:
+            psw &= ~mask
+        self.db.set_psw(psw)
 
+    def _get_flag(self, flag: str) -> int:
+        mask = {"C":1, "V":2, "Z":4, "N":8, "T":16}[flag]
+        return 1 if (self.db.get_psw() & mask) else 0
 
 
     # ---------- Адресация ----------
@@ -375,11 +336,21 @@ class CPU:
 
         # ----------------- mode 2: (R)+ / #imm -----------------
         if mode == 2:
-            if reg == 7:  # PC = immediate
-                imm = self._mem_read_word((pc + 2) & 0xFFFF)
+            if reg == 7:
+                # immediate — слово находится в потоке команды по адресу (pc + 2)
+                imm_addr = (pc + 2) & 0xFFFF
+                imm = self._mem_read_word(imm_addr)
+
                 if as_dest:
-                    raise ValueError("Immediate cannot be destination")
-                return (imm if is_word else (imm & 0xFF)), None, 1, None
+                    val = imm if is_word else (imm & 0xFF)
+                    def wb(v, a=imm_addr):
+
+                        write_ea(a, v)
+
+                    return val, wb, 1, imm_addr
+
+                val = imm if is_word else (imm & 0xFF)
+                return val, None, 1, None
 
             ea = self.get_register(reg_name) & 0xFFFF
             val = read_ea(ea)
