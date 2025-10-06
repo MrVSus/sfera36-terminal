@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <assembly xmlns="urn:schemas-microsoft-com:asm.v1" manifestVersion="1.0">
+  <assemblyIdentity type="win32" name="win7_spec" processorArchitecture="amd64" version="1.0.0.0"/>
   <trustInfo xmlns="urn:schemas-microsoft-com:asm.v3">
     <security>
       <requestedPrivileges>
@@ -10,6 +11,7 @@
   <dependency>
     <dependentAssembly>
       <assemblyIdentity type="win32" name="Microsoft.Windows.Common-Controls" language="*" processorArchitecture="*" version="6.0.0.0" publicKeyToken="6595b64144ccf1df"/>
+      <compatibility xmlns="urn:schemas-microsoft-com:compatibility.v1"/>
     </dependentAssembly>
   </dependency>
   <compatibility xmlns="urn:schemas-microsoft-com:compatibility.v1">

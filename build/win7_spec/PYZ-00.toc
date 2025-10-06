@@ -1,5 +1,5 @@
 ('C:\\Users\\V '
- 'Sus\\Desktop\\Диплом\\sfera36_terminal\\build\\win7_spec\\PYZ-00.pyz',
+ 'Sus\\Desktop\\sfera\\sfera36_terminal\\build\\win7_spec\\PYZ-00.pyz',
  [('inspect',
    'C:\\Users\\V '
    'Sus\\AppData\\Local\\Programs\\Python\\Python39\\lib\\inspect.py',
@@ -865,6 +865,10 @@
    'C:\\Users\\V '
    'Sus\\AppData\\Local\\Programs\\Python\\Python39\\lib\\token.py',
    'PYMODULE'),
+  ('tokenize',
+   'C:\\Users\\V '
+   'Sus\\AppData\\Local\\Programs\\Python\\Python39\\lib\\tokenize.py',
+   'PYMODULE'),
   ('importlib.machinery',
    'C:\\Users\\V '
    'Sus\\AppData\\Local\\Programs\\Python\\Python39\\lib\\importlib\\machinery.py',
@@ -883,13 +887,13 @@
    'C:\\Users\\V '
    'Sus\\AppData\\Local\\Programs\\Python\\Python39\\lib\\site-packages\\shiboken2\\__init__.py',
    'PYMODULE'),
-  ('stringprep',
-   'C:\\Users\\V '
-   'Sus\\AppData\\Local\\Programs\\Python\\Python39\\lib\\stringprep.py',
-   'PYMODULE'),
   ('_py_abc',
    'C:\\Users\\V '
    'Sus\\AppData\\Local\\Programs\\Python\\Python39\\lib\\_py_abc.py',
+   'PYMODULE'),
+  ('stringprep',
+   'C:\\Users\\V '
+   'Sus\\AppData\\Local\\Programs\\Python\\Python39\\lib\\stringprep.py',
    'PYMODULE'),
   ('tracemalloc',
    'C:\\Users\\V '
@@ -904,34 +908,33 @@
    'PYMODULE'),
   ('ui.pages.terminal_window',
    'C:\\Users\\V '
-   'Sus\\Desktop\\Диплом\\sfera36_terminal\\ui\\pages\\terminal_window.py',
+   'Sus\\Desktop\\sfera\\sfera36_terminal\\ui\\pages\\terminal_window.py',
    'PYMODULE'),
   ('ui.pages',
-   'C:\\Users\\V '
-   'Sus\\Desktop\\Диплом\\sfera36_terminal\\ui\\pages\\__init__.py',
+   'C:\\Users\\V Sus\\Desktop\\sfera\\sfera36_terminal\\ui\\pages\\__init__.py',
    'PYMODULE'),
   ('ui',
-   'C:\\Users\\V Sus\\Desktop\\Диплом\\sfera36_terminal\\ui\\__init__.py',
+   'C:\\Users\\V Sus\\Desktop\\sfera\\sfera36_terminal\\ui\\__init__.py',
    'PYMODULE'),
   ('core.processor',
-   'C:\\Users\\V Sus\\Desktop\\Диплом\\sfera36_terminal\\core\\processor.py',
+   'C:\\Users\\V Sus\\Desktop\\sfera\\sfera36_terminal\\core\\processor.py',
    'PYMODULE'),
   ('core',
-   'C:\\Users\\V Sus\\Desktop\\Диплом\\sfera36_terminal\\core\\__init__.py',
+   'C:\\Users\\V Sus\\Desktop\\sfera\\sfera36_terminal\\core\\__init__.py',
    'PYMODULE'),
   ('core.command_parser',
    'C:\\Users\\V '
-   'Sus\\Desktop\\Диплом\\sfera36_terminal\\core\\command_parser.py',
+   'Sus\\Desktop\\sfera\\sfera36_terminal\\core\\command_parser.py',
    'PYMODULE'),
   ('core.command_handlers',
    'C:\\Users\\V '
-   'Sus\\Desktop\\Диплом\\sfera36_terminal\\core\\command_handlers.py',
+   'Sus\\Desktop\\sfera\\sfera36_terminal\\core\\command_handlers.py',
    'PYMODULE'),
   ('data.database',
-   'C:\\Users\\V Sus\\Desktop\\Диплом\\sfera36_terminal\\data\\database.py',
+   'C:\\Users\\V Sus\\Desktop\\sfera\\sfera36_terminal\\data\\database.py',
    'PYMODULE'),
   ('data',
-   'C:\\Users\\V Sus\\Desktop\\Диплом\\sfera36_terminal\\data\\__init__.py',
+   'C:\\Users\\V Sus\\Desktop\\sfera\\sfera36_terminal\\data\\__init__.py',
    'PYMODULE'),
   ('sqlite3',
    'C:\\Users\\V '

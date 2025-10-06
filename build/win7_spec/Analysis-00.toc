@@ -1,5 +1,5 @@
-(['C:\\Users\\V Sus\\Desktop\\Диплом\\sfera36_terminal\\main.py'],
- ['C:\\Users\\V Sus\\Desktop\\Диплом\\sfera36_terminal'],
+(['C:\\Users\\V Sus\\Desktop\\sfera\\sfera36_terminal\\main.py'],
+ ['C:\\Users\\V Sus\\Desktop\\sfera\\sfera36_terminal'],
  ['PySide2.QtCore',
   'PySide2.QtGui',
   'PySide2.QtWidgets',
@@ -17,11 +17,7 @@
  False,
  '3.9.13 (tags/v3.9.13:6de2ca5, May 17 2022, 16:36:42) [MSC v.1929 64 bit '
  '(AMD64)]',
- [('pyi_rth_subprocess',
-   'C:\\Users\\V '
-   'Sus\\AppData\\Local\\Programs\\Python\\Python39\\Lib\\site-packages\\PyInstaller\\hooks\\rthooks\\pyi_rth_subprocess.py',
-   'PYSOURCE'),
-  ('pyi_rth_pkgutil',
+ [('pyi_rth_pkgutil',
    'C:\\Users\\V '
    'Sus\\AppData\\Local\\Programs\\Python\\Python39\\Lib\\site-packages\\PyInstaller\\hooks\\rthooks\\pyi_rth_pkgutil.py',
    'PYSOURCE'),
@@ -38,7 +34,7 @@
    'Sus\\AppData\\Local\\Programs\\Python\\Python39\\Lib\\site-packages\\PyInstaller\\hooks\\rthooks\\pyi_rth_pyside2.py',
    'PYSOURCE'),
   ('main',
-   'C:\\Users\\V Sus\\Desktop\\Диплом\\sfera36_terminal\\main.py',
+   'C:\\Users\\V Sus\\Desktop\\sfera\\sfera36_terminal\\main.py',
    'PYSOURCE')],
  [('inspect',
    'C:\\Users\\V '
@@ -905,6 +901,10 @@
    'C:\\Users\\V '
    'Sus\\AppData\\Local\\Programs\\Python\\Python39\\lib\\token.py',
    'PYMODULE'),
+  ('tokenize',
+   'C:\\Users\\V '
+   'Sus\\AppData\\Local\\Programs\\Python\\Python39\\lib\\tokenize.py',
+   'PYMODULE'),
   ('importlib.machinery',
    'C:\\Users\\V '
    'Sus\\AppData\\Local\\Programs\\Python\\Python39\\lib\\importlib\\machinery.py',
@@ -923,13 +923,13 @@
    'C:\\Users\\V '
    'Sus\\AppData\\Local\\Programs\\Python\\Python39\\lib\\site-packages\\shiboken2\\__init__.py',
    'PYMODULE'),
-  ('stringprep',
-   'C:\\Users\\V '
-   'Sus\\AppData\\Local\\Programs\\Python\\Python39\\lib\\stringprep.py',
-   'PYMODULE'),
   ('_py_abc',
    'C:\\Users\\V '
    'Sus\\AppData\\Local\\Programs\\Python\\Python39\\lib\\_py_abc.py',
+   'PYMODULE'),
+  ('stringprep',
+   'C:\\Users\\V '
+   'Sus\\AppData\\Local\\Programs\\Python\\Python39\\lib\\stringprep.py',
    'PYMODULE'),
   ('tracemalloc',
    'C:\\Users\\V '
@@ -944,34 +944,33 @@
    'PYMODULE'),
   ('ui.pages.terminal_window',
    'C:\\Users\\V '
-   'Sus\\Desktop\\Диплом\\sfera36_terminal\\ui\\pages\\terminal_window.py',
+   'Sus\\Desktop\\sfera\\sfera36_terminal\\ui\\pages\\terminal_window.py',
    'PYMODULE'),
   ('ui.pages',
-   'C:\\Users\\V '
-   'Sus\\Desktop\\Диплом\\sfera36_terminal\\ui\\pages\\__init__.py',
+   'C:\\Users\\V Sus\\Desktop\\sfera\\sfera36_terminal\\ui\\pages\\__init__.py',
    'PYMODULE'),
   ('ui',
-   'C:\\Users\\V Sus\\Desktop\\Диплом\\sfera36_terminal\\ui\\__init__.py',
+   'C:\\Users\\V Sus\\Desktop\\sfera\\sfera36_terminal\\ui\\__init__.py',
    'PYMODULE'),
   ('core.processor',
-   'C:\\Users\\V Sus\\Desktop\\Диплом\\sfera36_terminal\\core\\processor.py',
+   'C:\\Users\\V Sus\\Desktop\\sfera\\sfera36_terminal\\core\\processor.py',
    'PYMODULE'),
   ('core',
-   'C:\\Users\\V Sus\\Desktop\\Диплом\\sfera36_terminal\\core\\__init__.py',
+   'C:\\Users\\V Sus\\Desktop\\sfera\\sfera36_terminal\\core\\__init__.py',
    'PYMODULE'),
   ('core.command_parser',
    'C:\\Users\\V '
-   'Sus\\Desktop\\Диплом\\sfera36_terminal\\core\\command_parser.py',
+   'Sus\\Desktop\\sfera\\sfera36_terminal\\core\\command_parser.py',
    'PYMODULE'),
   ('core.command_handlers',
    'C:\\Users\\V '
-   'Sus\\Desktop\\Диплом\\sfera36_terminal\\core\\command_handlers.py',
+   'Sus\\Desktop\\sfera\\sfera36_terminal\\core\\command_handlers.py',
    'PYMODULE'),
   ('data.database',
-   'C:\\Users\\V Sus\\Desktop\\Диплом\\sfera36_terminal\\data\\database.py',
+   'C:\\Users\\V Sus\\Desktop\\sfera\\sfera36_terminal\\data\\database.py',
    'PYMODULE'),
   ('data',
-   'C:\\Users\\V Sus\\Desktop\\Диплом\\sfera36_terminal\\data\\__init__.py',
+   'C:\\Users\\V Sus\\Desktop\\sfera\\sfera36_terminal\\data\\__init__.py',
    'PYMODULE'),
   ('sqlite3',
    'C:\\Users\\V '
@@ -985,52 +984,44 @@
    'C:\\Users\\V '
    'Sus\\AppData\\Local\\Programs\\Python\\Python39\\lib\\sqlite3\\dbapi2.py',
    'PYMODULE')],
- [('api-ms-win-crt-math-l1-1-0.dll',
+ [('api-ms-win-crt-stdio-l1-1-0.dll',
    'C:\\Program Files (x86)\\Windows Kits\\10\\Windows Performance '
-   'Toolkit\\api-ms-win-crt-math-l1-1-0.dll',
+   'Toolkit\\api-ms-win-crt-stdio-l1-1-0.dll',
    'BINARY'),
   ('api-ms-win-crt-runtime-l1-1-0.dll',
    'C:\\Program Files (x86)\\Windows Kits\\10\\Windows Performance '
    'Toolkit\\api-ms-win-crt-runtime-l1-1-0.dll',
    'BINARY'),
-  ('VCRUNTIME140.dll',
-   'C:\\Users\\V '
-   'Sus\\AppData\\Local\\Programs\\Python\\Python39\\VCRUNTIME140.dll',
-   'BINARY'),
   ('api-ms-win-crt-locale-l1-1-0.dll',
    'C:\\Program Files (x86)\\Windows Kits\\10\\Windows Performance '
    'Toolkit\\api-ms-win-crt-locale-l1-1-0.dll',
+   'BINARY'),
+  ('python39.dll',
+   'C:\\Users\\V Sus\\AppData\\Local\\Programs\\Python\\Python39\\python39.dll',
+   'BINARY'),
+  ('api-ms-win-crt-math-l1-1-0.dll',
+   'C:\\Program Files (x86)\\Windows Kits\\10\\Windows Performance '
+   'Toolkit\\api-ms-win-crt-math-l1-1-0.dll',
    'BINARY'),
   ('api-ms-win-crt-heap-l1-1-0.dll',
    'C:\\Program Files (x86)\\Windows Kits\\10\\Windows Performance '
    'Toolkit\\api-ms-win-crt-heap-l1-1-0.dll',
    'BINARY'),
-  ('python39.dll',
-   'C:\\Users\\V Sus\\AppData\\Local\\Programs\\Python\\Python39\\python39.dll',
-   'BINARY'),
-  ('api-ms-win-crt-stdio-l1-1-0.dll',
-   'C:\\Program Files (x86)\\Windows Kits\\10\\Windows Performance '
-   'Toolkit\\api-ms-win-crt-stdio-l1-1-0.dll',
+  ('VCRUNTIME140.dll',
+   'C:\\Users\\V '
+   'Sus\\AppData\\Local\\Programs\\Python\\Python39\\VCRUNTIME140.dll',
    'BINARY'),
   ('ucrtbase.dll',
    'C:\\Program Files (x86)\\Windows Kits\\10\\Windows Performance '
    'Toolkit\\ucrtbase.dll',
    'BINARY'),
-  ('api-ms-win-crt-string-l1-1-0.dll',
-   'C:\\Program Files (x86)\\Windows Kits\\10\\Windows Performance '
-   'Toolkit\\api-ms-win-crt-string-l1-1-0.dll',
-   'BINARY'),
-  ('api-ms-win-crt-convert-l1-1-0.dll',
-   'C:\\Program Files (x86)\\Windows Kits\\10\\Windows Performance '
-   'Toolkit\\api-ms-win-crt-convert-l1-1-0.dll',
-   'BINARY'),
   ('api-ms-win-crt-process-l1-1-0.dll',
    'C:\\Program Files (x86)\\Windows Kits\\10\\Windows Performance '
    'Toolkit\\api-ms-win-crt-process-l1-1-0.dll',
    'BINARY'),
-  ('api-ms-win-crt-filesystem-l1-1-0.dll',
+  ('api-ms-win-crt-string-l1-1-0.dll',
    'C:\\Program Files (x86)\\Windows Kits\\10\\Windows Performance '
-   'Toolkit\\api-ms-win-crt-filesystem-l1-1-0.dll',
+   'Toolkit\\api-ms-win-crt-string-l1-1-0.dll',
    'BINARY'),
   ('api-ms-win-crt-time-l1-1-0.dll',
    'C:\\Program Files (x86)\\Windows Kits\\10\\Windows Performance '
@@ -1040,97 +1031,105 @@
    'C:\\Program Files (x86)\\Windows Kits\\10\\Windows Performance '
    'Toolkit\\api-ms-win-crt-conio-l1-1-0.dll',
    'BINARY'),
+  ('api-ms-win-crt-filesystem-l1-1-0.dll',
+   'C:\\Program Files (x86)\\Windows Kits\\10\\Windows Performance '
+   'Toolkit\\api-ms-win-crt-filesystem-l1-1-0.dll',
+   'BINARY'),
   ('api-ms-win-crt-environment-l1-1-0.dll',
    'C:\\Program Files (x86)\\Windows Kits\\10\\Windows Performance '
    'Toolkit\\api-ms-win-crt-environment-l1-1-0.dll',
    'BINARY'),
-  ('api-ms-win-core-debug-l1-1-0.dll',
+  ('api-ms-win-crt-convert-l1-1-0.dll',
    'C:\\Program Files (x86)\\Windows Kits\\10\\Windows Performance '
-   'Toolkit\\api-ms-win-core-debug-l1-1-0.dll',
-   'BINARY'),
-  ('api-ms-win-core-synch-l1-2-0.dll',
-   'C:\\Program Files (x86)\\Windows Kits\\10\\Windows Performance '
-   'Toolkit\\api-ms-win-core-synch-l1-2-0.dll',
-   'BINARY'),
-  ('api-ms-win-core-profile-l1-1-0.dll',
-   'C:\\Program Files (x86)\\Windows Kits\\10\\Windows Performance '
-   'Toolkit\\api-ms-win-core-profile-l1-1-0.dll',
-   'BINARY'),
-  ('api-ms-win-core-processthreads-l1-1-1.dll',
-   'C:\\Program Files (x86)\\Windows Kits\\10\\Windows Performance '
-   'Toolkit\\api-ms-win-core-processthreads-l1-1-1.dll',
-   'BINARY'),
-  ('api-ms-win-core-processthreads-l1-1-0.dll',
-   'C:\\Program Files (x86)\\Windows Kits\\10\\Windows Performance '
-   'Toolkit\\api-ms-win-core-processthreads-l1-1-0.dll',
-   'BINARY'),
-  ('api-ms-win-core-file-l1-2-0.dll',
-   'C:\\Program Files (x86)\\Windows Kits\\10\\Windows Performance '
-   'Toolkit\\api-ms-win-core-file-l1-2-0.dll',
+   'Toolkit\\api-ms-win-crt-convert-l1-1-0.dll',
    'BINARY'),
   ('api-ms-win-core-memory-l1-1-0.dll',
    'C:\\Program Files (x86)\\Windows Kits\\10\\Windows Performance '
    'Toolkit\\api-ms-win-core-memory-l1-1-0.dll',
    'BINARY'),
-  ('api-ms-win-core-util-l1-1-0.dll',
-   'C:\\Program Files (x86)\\Windows Kits\\10\\Windows Performance '
-   'Toolkit\\api-ms-win-core-util-l1-1-0.dll',
-   'BINARY'),
-  ('api-ms-win-core-errorhandling-l1-1-0.dll',
-   'C:\\Program Files (x86)\\Windows Kits\\10\\Windows Performance '
-   'Toolkit\\api-ms-win-core-errorhandling-l1-1-0.dll',
-   'BINARY'),
-  ('api-ms-win-core-synch-l1-1-0.dll',
-   'C:\\Program Files (x86)\\Windows Kits\\10\\Windows Performance '
-   'Toolkit\\api-ms-win-core-synch-l1-1-0.dll',
-   'BINARY'),
   ('api-ms-win-core-handle-l1-1-0.dll',
    'C:\\Program Files (x86)\\Windows Kits\\10\\Windows Performance '
    'Toolkit\\api-ms-win-core-handle-l1-1-0.dll',
    'BINARY'),
-  ('api-ms-win-core-heap-l1-1-0.dll',
+  ('api-ms-win-core-file-l1-2-0.dll',
    'C:\\Program Files (x86)\\Windows Kits\\10\\Windows Performance '
-   'Toolkit\\api-ms-win-core-heap-l1-1-0.dll',
-   'BINARY'),
-  ('api-ms-win-core-interlocked-l1-1-0.dll',
-   'C:\\Program Files (x86)\\Windows Kits\\10\\Windows Performance '
-   'Toolkit\\api-ms-win-core-interlocked-l1-1-0.dll',
-   'BINARY'),
-  ('api-ms-win-core-timezone-l1-1-0.dll',
-   'C:\\Program Files (x86)\\Windows Kits\\10\\Windows Performance '
-   'Toolkit\\api-ms-win-core-timezone-l1-1-0.dll',
+   'Toolkit\\api-ms-win-core-file-l1-2-0.dll',
    'BINARY'),
   ('api-ms-win-core-rtlsupport-l1-1-0.dll',
    'C:\\Program Files (x86)\\Windows Kits\\10\\Windows Performance '
    'Toolkit\\api-ms-win-core-rtlsupport-l1-1-0.dll',
    'BINARY'),
-  ('api-ms-win-core-namedpipe-l1-1-0.dll',
+  ('api-ms-win-core-timezone-l1-1-0.dll',
    'C:\\Program Files (x86)\\Windows Kits\\10\\Windows Performance '
-   'Toolkit\\api-ms-win-core-namedpipe-l1-1-0.dll',
-   'BINARY'),
-  ('api-ms-win-core-file-l1-1-0.dll',
-   'C:\\Program Files (x86)\\Windows Kits\\10\\Windows Performance '
-   'Toolkit\\api-ms-win-core-file-l1-1-0.dll',
-   'BINARY'),
-  ('api-ms-win-core-console-l1-1-0.dll',
-   'C:\\Program Files (x86)\\Windows Kits\\10\\Windows Performance '
-   'Toolkit\\api-ms-win-core-console-l1-1-0.dll',
-   'BINARY'),
-  ('api-ms-win-core-string-l1-1-0.dll',
-   'C:\\Program Files (x86)\\Windows Kits\\10\\Windows Performance '
-   'Toolkit\\api-ms-win-core-string-l1-1-0.dll',
-   'BINARY'),
-  ('api-ms-win-core-datetime-l1-1-0.dll',
-   'C:\\Program Files (x86)\\Windows Kits\\10\\Windows Performance '
-   'Toolkit\\api-ms-win-core-datetime-l1-1-0.dll',
+   'Toolkit\\api-ms-win-core-timezone-l1-1-0.dll',
    'BINARY'),
   ('api-ms-win-core-sysinfo-l1-1-0.dll',
    'C:\\Program Files (x86)\\Windows Kits\\10\\Windows Performance '
    'Toolkit\\api-ms-win-core-sysinfo-l1-1-0.dll',
    'BINARY'),
+  ('api-ms-win-core-synch-l1-2-0.dll',
+   'C:\\Program Files (x86)\\Windows Kits\\10\\Windows Performance '
+   'Toolkit\\api-ms-win-core-synch-l1-2-0.dll',
+   'BINARY'),
+  ('api-ms-win-core-string-l1-1-0.dll',
+   'C:\\Program Files (x86)\\Windows Kits\\10\\Windows Performance '
+   'Toolkit\\api-ms-win-core-string-l1-1-0.dll',
+   'BINARY'),
+  ('api-ms-win-core-processenvironment-l1-1-0.dll',
+   'C:\\Program Files (x86)\\Windows Kits\\10\\Windows Performance '
+   'Toolkit\\api-ms-win-core-processenvironment-l1-1-0.dll',
+   'BINARY'),
+  ('api-ms-win-core-profile-l1-1-0.dll',
+   'C:\\Program Files (x86)\\Windows Kits\\10\\Windows Performance '
+   'Toolkit\\api-ms-win-core-profile-l1-1-0.dll',
+   'BINARY'),
+  ('api-ms-win-core-console-l1-1-0.dll',
+   'C:\\Program Files (x86)\\Windows Kits\\10\\Windows Performance '
+   'Toolkit\\api-ms-win-core-console-l1-1-0.dll',
+   'BINARY'),
+  ('api-ms-win-core-errorhandling-l1-1-0.dll',
+   'C:\\Program Files (x86)\\Windows Kits\\10\\Windows Performance '
+   'Toolkit\\api-ms-win-core-errorhandling-l1-1-0.dll',
+   'BINARY'),
+  ('api-ms-win-core-datetime-l1-1-0.dll',
+   'C:\\Program Files (x86)\\Windows Kits\\10\\Windows Performance '
+   'Toolkit\\api-ms-win-core-datetime-l1-1-0.dll',
+   'BINARY'),
+  ('api-ms-win-core-file-l1-1-0.dll',
+   'C:\\Program Files (x86)\\Windows Kits\\10\\Windows Performance '
+   'Toolkit\\api-ms-win-core-file-l1-1-0.dll',
+   'BINARY'),
+  ('api-ms-win-core-namedpipe-l1-1-0.dll',
+   'C:\\Program Files (x86)\\Windows Kits\\10\\Windows Performance '
+   'Toolkit\\api-ms-win-core-namedpipe-l1-1-0.dll',
+   'BINARY'),
   ('api-ms-win-core-libraryloader-l1-1-0.dll',
    'C:\\Program Files (x86)\\Windows Kits\\10\\Windows Performance '
    'Toolkit\\api-ms-win-core-libraryloader-l1-1-0.dll',
+   'BINARY'),
+  ('api-ms-win-core-processthreads-l1-1-0.dll',
+   'C:\\Program Files (x86)\\Windows Kits\\10\\Windows Performance '
+   'Toolkit\\api-ms-win-core-processthreads-l1-1-0.dll',
+   'BINARY'),
+  ('api-ms-win-core-interlocked-l1-1-0.dll',
+   'C:\\Program Files (x86)\\Windows Kits\\10\\Windows Performance '
+   'Toolkit\\api-ms-win-core-interlocked-l1-1-0.dll',
+   'BINARY'),
+  ('api-ms-win-core-debug-l1-1-0.dll',
+   'C:\\Program Files (x86)\\Windows Kits\\10\\Windows Performance '
+   'Toolkit\\api-ms-win-core-debug-l1-1-0.dll',
+   'BINARY'),
+  ('api-ms-win-core-processthreads-l1-1-1.dll',
+   'C:\\Program Files (x86)\\Windows Kits\\10\\Windows Performance '
+   'Toolkit\\api-ms-win-core-processthreads-l1-1-1.dll',
+   'BINARY'),
+  ('api-ms-win-core-synch-l1-1-0.dll',
+   'C:\\Program Files (x86)\\Windows Kits\\10\\Windows Performance '
+   'Toolkit\\api-ms-win-core-synch-l1-1-0.dll',
+   'BINARY'),
+  ('api-ms-win-core-heap-l1-1-0.dll',
+   'C:\\Program Files (x86)\\Windows Kits\\10\\Windows Performance '
+   'Toolkit\\api-ms-win-core-heap-l1-1-0.dll',
    'BINARY'),
   ('api-ms-win-core-localization-l1-2-0.dll',
    'C:\\Program Files (x86)\\Windows Kits\\10\\Windows Performance '
@@ -1140,37 +1139,9 @@
    'C:\\Program Files (x86)\\Windows Kits\\10\\Windows Performance '
    'Toolkit\\api-ms-win-core-file-l2-1-0.dll',
    'BINARY'),
-  ('api-ms-win-core-processenvironment-l1-1-0.dll',
+  ('api-ms-win-core-util-l1-1-0.dll',
    'C:\\Program Files (x86)\\Windows Kits\\10\\Windows Performance '
-   'Toolkit\\api-ms-win-core-processenvironment-l1-1-0.dll',
-   'BINARY'),
-  ('PySide2\\plugins\\styles\\qwindowsvistastyle.dll',
-   'C:\\Users\\V '
-   'Sus\\AppData\\Local\\Programs\\Python\\Python39\\lib\\site-packages\\PySide2\\plugins\\styles\\qwindowsvistastyle.dll',
-   'BINARY'),
-  ('PySide2\\plugins\\platforms\\qminimal.dll',
-   'C:\\Users\\V '
-   'Sus\\AppData\\Local\\Programs\\Python\\Python39\\lib\\site-packages\\PySide2\\plugins\\platforms\\qminimal.dll',
-   'BINARY'),
-  ('PySide2\\plugins\\platformthemes\\qxdgdesktopportal.dll',
-   'C:\\Users\\V '
-   'Sus\\AppData\\Local\\Programs\\Python\\Python39\\lib\\site-packages\\PySide2\\plugins\\platformthemes\\qxdgdesktopportal.dll',
-   'BINARY'),
-  ('PySide2\\plugins\\bearer\\qgenericbearer.dll',
-   'C:\\Users\\V '
-   'Sus\\AppData\\Local\\Programs\\Python\\Python39\\lib\\site-packages\\PySide2\\plugins\\bearer\\qgenericbearer.dll',
-   'BINARY'),
-  ('PySide2\\plugins\\imageformats\\qtga.dll',
-   'C:\\Users\\V '
-   'Sus\\AppData\\Local\\Programs\\Python\\Python39\\lib\\site-packages\\PySide2\\plugins\\imageformats\\qtga.dll',
-   'BINARY'),
-  ('PySide2\\plugins\\imageformats\\qicns.dll',
-   'C:\\Users\\V '
-   'Sus\\AppData\\Local\\Programs\\Python\\Python39\\lib\\site-packages\\PySide2\\plugins\\imageformats\\qicns.dll',
-   'BINARY'),
-  ('PySide2\\plugins\\imageformats\\qpdf.dll',
-   'C:\\Users\\V '
-   'Sus\\AppData\\Local\\Programs\\Python\\Python39\\lib\\site-packages\\PySide2\\plugins\\imageformats\\qpdf.dll',
+   'Toolkit\\api-ms-win-core-util-l1-1-0.dll',
    'BINARY'),
   ('PySide2\\plugins\\platforms\\qwebgl.dll',
    'C:\\Users\\V '
@@ -1180,65 +1151,89 @@
    'C:\\Users\\V '
    'Sus\\AppData\\Local\\Programs\\Python\\Python39\\lib\\site-packages\\PySide2\\plugins\\imageformats\\qsvg.dll',
    'BINARY'),
-  ('libGLESv2.dll',
-   'C:\\Users\\V '
-   'Sus\\AppData\\Local\\Programs\\Python\\Python39\\lib\\site-packages\\PySide2\\libGLESv2.dll',
-   'BINARY'),
-  ('PySide2\\plugins\\platforms\\qoffscreen.dll',
-   'C:\\Users\\V '
-   'Sus\\AppData\\Local\\Programs\\Python\\Python39\\lib\\site-packages\\PySide2\\plugins\\platforms\\qoffscreen.dll',
-   'BINARY'),
-  ('PySide2\\plugins\\imageformats\\qgif.dll',
-   'C:\\Users\\V '
-   'Sus\\AppData\\Local\\Programs\\Python\\Python39\\lib\\site-packages\\PySide2\\plugins\\imageformats\\qgif.dll',
-   'BINARY'),
-  ('PySide2\\plugins\\platforms\\qdirect2d.dll',
-   'C:\\Users\\V '
-   'Sus\\AppData\\Local\\Programs\\Python\\Python39\\lib\\site-packages\\PySide2\\plugins\\platforms\\qdirect2d.dll',
-   'BINARY'),
   ('PySide2\\plugins\\imageformats\\qtiff.dll',
    'C:\\Users\\V '
    'Sus\\AppData\\Local\\Programs\\Python\\Python39\\lib\\site-packages\\PySide2\\plugins\\imageformats\\qtiff.dll',
    'BINARY'),
-  ('libEGL.dll',
+  ('PySide2\\plugins\\imageformats\\qtga.dll',
    'C:\\Users\\V '
-   'Sus\\AppData\\Local\\Programs\\Python\\Python39\\lib\\site-packages\\PySide2\\libEGL.dll',
-   'BINARY'),
-  ('PySide2\\plugins\\imageformats\\qico.dll',
-   'C:\\Users\\V '
-   'Sus\\AppData\\Local\\Programs\\Python\\Python39\\lib\\site-packages\\PySide2\\plugins\\imageformats\\qico.dll',
-   'BINARY'),
-  ('PySide2\\plugins\\imageformats\\qwbmp.dll',
-   'C:\\Users\\V '
-   'Sus\\AppData\\Local\\Programs\\Python\\Python39\\lib\\site-packages\\PySide2\\plugins\\imageformats\\qwbmp.dll',
-   'BINARY'),
-  ('PySide2\\plugins\\imageformats\\qwebp.dll',
-   'C:\\Users\\V '
-   'Sus\\AppData\\Local\\Programs\\Python\\Python39\\lib\\site-packages\\PySide2\\plugins\\imageformats\\qwebp.dll',
-   'BINARY'),
-  ('opengl32sw.dll',
-   'C:\\Users\\V '
-   'Sus\\AppData\\Local\\Programs\\Python\\Python39\\lib\\site-packages\\PySide2\\opengl32sw.dll',
-   'BINARY'),
-  ('PySide2\\plugins\\imageformats\\qjpeg.dll',
-   'C:\\Users\\V '
-   'Sus\\AppData\\Local\\Programs\\Python\\Python39\\lib\\site-packages\\PySide2\\plugins\\imageformats\\qjpeg.dll',
-   'BINARY'),
-  ('PySide2\\plugins\\platforminputcontexts\\qtvirtualkeyboardplugin.dll',
-   'C:\\Users\\V '
-   'Sus\\AppData\\Local\\Programs\\Python\\Python39\\lib\\site-packages\\PySide2\\plugins\\platforminputcontexts\\qtvirtualkeyboardplugin.dll',
+   'Sus\\AppData\\Local\\Programs\\Python\\Python39\\lib\\site-packages\\PySide2\\plugins\\imageformats\\qtga.dll',
    'BINARY'),
   ('d3dcompiler_47.dll',
    'C:\\Users\\V '
    'Sus\\AppData\\Local\\Programs\\Python\\Python39\\lib\\site-packages\\PySide2\\d3dcompiler_47.dll',
    'BINARY'),
+  ('PySide2\\plugins\\platforms\\qoffscreen.dll',
+   'C:\\Users\\V '
+   'Sus\\AppData\\Local\\Programs\\Python\\Python39\\lib\\site-packages\\PySide2\\plugins\\platforms\\qoffscreen.dll',
+   'BINARY'),
+  ('opengl32sw.dll',
+   'C:\\Users\\V '
+   'Sus\\AppData\\Local\\Programs\\Python\\Python39\\lib\\site-packages\\PySide2\\opengl32sw.dll',
+   'BINARY'),
+  ('PySide2\\plugins\\imageformats\\qwebp.dll',
+   'C:\\Users\\V '
+   'Sus\\AppData\\Local\\Programs\\Python\\Python39\\lib\\site-packages\\PySide2\\plugins\\imageformats\\qwebp.dll',
+   'BINARY'),
+  ('PySide2\\plugins\\bearer\\qgenericbearer.dll',
+   'C:\\Users\\V '
+   'Sus\\AppData\\Local\\Programs\\Python\\Python39\\lib\\site-packages\\PySide2\\plugins\\bearer\\qgenericbearer.dll',
+   'BINARY'),
   ('PySide2\\plugins\\iconengines\\qsvgicon.dll',
    'C:\\Users\\V '
    'Sus\\AppData\\Local\\Programs\\Python\\Python39\\lib\\site-packages\\PySide2\\plugins\\iconengines\\qsvgicon.dll',
    'BINARY'),
+  ('libEGL.dll',
+   'C:\\Users\\V '
+   'Sus\\AppData\\Local\\Programs\\Python\\Python39\\lib\\site-packages\\PySide2\\libEGL.dll',
+   'BINARY'),
+  ('PySide2\\plugins\\styles\\qwindowsvistastyle.dll',
+   'C:\\Users\\V '
+   'Sus\\AppData\\Local\\Programs\\Python\\Python39\\lib\\site-packages\\PySide2\\plugins\\styles\\qwindowsvistastyle.dll',
+   'BINARY'),
+  ('PySide2\\plugins\\platforms\\qminimal.dll',
+   'C:\\Users\\V '
+   'Sus\\AppData\\Local\\Programs\\Python\\Python39\\lib\\site-packages\\PySide2\\plugins\\platforms\\qminimal.dll',
+   'BINARY'),
+  ('PySide2\\plugins\\imageformats\\qgif.dll',
+   'C:\\Users\\V '
+   'Sus\\AppData\\Local\\Programs\\Python\\Python39\\lib\\site-packages\\PySide2\\plugins\\imageformats\\qgif.dll',
+   'BINARY'),
+  ('PySide2\\plugins\\imageformats\\qwbmp.dll',
+   'C:\\Users\\V '
+   'Sus\\AppData\\Local\\Programs\\Python\\Python39\\lib\\site-packages\\PySide2\\plugins\\imageformats\\qwbmp.dll',
+   'BINARY'),
   ('PySide2\\plugins\\platforms\\qwindows.dll',
    'C:\\Users\\V '
    'Sus\\AppData\\Local\\Programs\\Python\\Python39\\lib\\site-packages\\PySide2\\plugins\\platforms\\qwindows.dll',
+   'BINARY'),
+  ('libGLESv2.dll',
+   'C:\\Users\\V '
+   'Sus\\AppData\\Local\\Programs\\Python\\Python39\\lib\\site-packages\\PySide2\\libGLESv2.dll',
+   'BINARY'),
+  ('PySide2\\plugins\\imageformats\\qicns.dll',
+   'C:\\Users\\V '
+   'Sus\\AppData\\Local\\Programs\\Python\\Python39\\lib\\site-packages\\PySide2\\plugins\\imageformats\\qicns.dll',
+   'BINARY'),
+  ('PySide2\\plugins\\imageformats\\qjpeg.dll',
+   'C:\\Users\\V '
+   'Sus\\AppData\\Local\\Programs\\Python\\Python39\\lib\\site-packages\\PySide2\\plugins\\imageformats\\qjpeg.dll',
+   'BINARY'),
+  ('PySide2\\plugins\\imageformats\\qico.dll',
+   'C:\\Users\\V '
+   'Sus\\AppData\\Local\\Programs\\Python\\Python39\\lib\\site-packages\\PySide2\\plugins\\imageformats\\qico.dll',
+   'BINARY'),
+  ('PySide2\\plugins\\platforminputcontexts\\qtvirtualkeyboardplugin.dll',
+   'C:\\Users\\V '
+   'Sus\\AppData\\Local\\Programs\\Python\\Python39\\lib\\site-packages\\PySide2\\plugins\\platforminputcontexts\\qtvirtualkeyboardplugin.dll',
+   'BINARY'),
+  ('PySide2\\plugins\\platformthemes\\qxdgdesktopportal.dll',
+   'C:\\Users\\V '
+   'Sus\\AppData\\Local\\Programs\\Python\\Python39\\lib\\site-packages\\PySide2\\plugins\\platformthemes\\qxdgdesktopportal.dll',
+   'BINARY'),
+  ('PySide2\\plugins\\imageformats\\qpdf.dll',
+   'C:\\Users\\V '
+   'Sus\\AppData\\Local\\Programs\\Python\\Python39\\lib\\site-packages\\PySide2\\plugins\\imageformats\\qpdf.dll',
    'BINARY'),
   ('_lzma',
    'C:\\Users\\V '
@@ -1320,50 +1315,42 @@
    'C:\\Users\\V '
    'Sus\\AppData\\Local\\Programs\\Python\\Python39\\lib\\site-packages\\PySide2\\QtWidgets.pyd',
    'EXTENSION'),
+  ('Qt5WebSockets.dll',
+   'C:\\Users\\V '
+   'Sus\\AppData\\Local\\Programs\\Python\\Python39\\lib\\site-packages\\PySide2\\Qt5WebSockets.dll',
+   'BINARY'),
   ('Qt5Gui.dll',
    'C:\\Users\\V '
    'Sus\\AppData\\Local\\Programs\\Python\\Python39\\lib\\site-packages\\PySide2\\Qt5Gui.dll',
-   'BINARY'),
-  ('VCRUNTIME140_1.dll',
-   'C:\\Users\\V '
-   'Sus\\AppData\\Local\\Programs\\Python\\Python39\\VCRUNTIME140_1.dll',
-   'BINARY'),
-  ('Qt5Core.dll',
-   'C:\\Users\\V '
-   'Sus\\AppData\\Local\\Programs\\Python\\Python39\\lib\\site-packages\\PySide2\\Qt5Core.dll',
-   'BINARY'),
-  ('Qt5Widgets.dll',
-   'C:\\Users\\V '
-   'Sus\\AppData\\Local\\Programs\\Python\\Python39\\lib\\site-packages\\PySide2\\Qt5Widgets.dll',
-   'BINARY'),
-  ('api-ms-win-crt-utility-l1-1-0.dll',
-   'C:\\Program Files (x86)\\Windows Kits\\10\\Windows Performance '
-   'Toolkit\\api-ms-win-crt-utility-l1-1-0.dll',
-   'BINARY'),
-  ('Qt5DBus.dll',
-   'C:\\Users\\V '
-   'Sus\\AppData\\Local\\Programs\\Python\\Python39\\lib\\site-packages\\PySide2\\Qt5DBus.dll',
-   'BINARY'),
-  ('Qt5Network.dll',
-   'C:\\Users\\V '
-   'Sus\\AppData\\Local\\Programs\\Python\\Python39\\lib\\site-packages\\PySide2\\Qt5Network.dll',
-   'BINARY'),
-  ('Qt5Pdf.dll',
-   'C:\\Users\\V '
-   'Sus\\AppData\\Local\\Programs\\Python\\Python39\\lib\\site-packages\\PySide2\\Qt5Pdf.dll',
    'BINARY'),
   ('Qt5Quick.dll',
    'C:\\Users\\V '
    'Sus\\AppData\\Local\\Programs\\Python\\Python39\\lib\\site-packages\\PySide2\\Qt5Quick.dll',
    'BINARY'),
-  ('Qt5WebSockets.dll',
+  ('Qt5Network.dll',
    'C:\\Users\\V '
-   'Sus\\AppData\\Local\\Programs\\Python\\Python39\\lib\\site-packages\\PySide2\\Qt5WebSockets.dll',
+   'Sus\\AppData\\Local\\Programs\\Python\\Python39\\lib\\site-packages\\PySide2\\Qt5Network.dll',
    'BINARY'),
   ('MSVCP140.dll', 'C:\\Windows\\system32\\MSVCP140.dll', 'BINARY'),
+  ('Qt5Core.dll',
+   'C:\\Users\\V '
+   'Sus\\AppData\\Local\\Programs\\Python\\Python39\\lib\\site-packages\\PySide2\\Qt5Core.dll',
+   'BINARY'),
   ('Qt5Svg.dll',
    'C:\\Users\\V '
    'Sus\\AppData\\Local\\Programs\\Python\\Python39\\lib\\site-packages\\PySide2\\Qt5Svg.dll',
+   'BINARY'),
+  ('api-ms-win-crt-utility-l1-1-0.dll',
+   'C:\\Program Files (x86)\\Windows Kits\\10\\Windows Performance '
+   'Toolkit\\api-ms-win-crt-utility-l1-1-0.dll',
+   'BINARY'),
+  ('VCRUNTIME140_1.dll',
+   'C:\\Users\\V '
+   'Sus\\AppData\\Local\\Programs\\Python\\Python39\\VCRUNTIME140_1.dll',
+   'BINARY'),
+  ('Qt5Widgets.dll',
+   'C:\\Users\\V '
+   'Sus\\AppData\\Local\\Programs\\Python\\Python39\\lib\\site-packages\\PySide2\\Qt5Widgets.dll',
    'BINARY'),
   ('Qt5Qml.dll',
    'C:\\Users\\V '
@@ -1372,6 +1359,14 @@
   ('Qt5VirtualKeyboard.dll',
    'C:\\Users\\V '
    'Sus\\AppData\\Local\\Programs\\Python\\Python39\\lib\\site-packages\\PySide2\\Qt5VirtualKeyboard.dll',
+   'BINARY'),
+  ('Qt5DBus.dll',
+   'C:\\Users\\V '
+   'Sus\\AppData\\Local\\Programs\\Python\\Python39\\lib\\site-packages\\PySide2\\Qt5DBus.dll',
+   'BINARY'),
+  ('Qt5Pdf.dll',
+   'C:\\Users\\V '
+   'Sus\\AppData\\Local\\Programs\\Python\\Python39\\lib\\site-packages\\PySide2\\Qt5Pdf.dll',
    'BINARY'),
   ('libssl-1_1.dll',
    'C:\\Users\\V '
@@ -1400,114 +1395,114 @@
    'C:\\Users\\V '
    'Sus\\AppData\\Local\\Programs\\Python\\Python39\\DLLs\\sqlite3.dll',
    'BINARY'),
-  ('MSVCP140_1.dll',
-   'C:\\Users\\V '
-   'Sus\\AppData\\Local\\Programs\\Python\\Python39\\lib\\site-packages\\PySide2\\MSVCP140_1.dll',
-   'BINARY'),
   ('Qt5QmlModels.dll',
    'C:\\Users\\V '
    'Sus\\AppData\\Local\\Programs\\Python\\Python39\\lib\\site-packages\\PySide2\\Qt5QmlModels.dll',
+   'BINARY'),
+  ('MSVCP140_1.dll',
+   'C:\\Users\\V '
+   'Sus\\AppData\\Local\\Programs\\Python\\Python39\\lib\\site-packages\\PySide2\\MSVCP140_1.dll',
    'BINARY')],
  [],
  [],
  [('base_library.zip',
    'C:\\Users\\V '
-   'Sus\\Desktop\\Диплом\\sfera36_terminal\\build\\win7_spec\\base_library.zip',
-   'DATA'),
-  ('PySide2\\translations\\qtbase_ru.qm',
-   'C:\\Users\\V '
-   'Sus\\AppData\\Local\\Programs\\Python\\Python39\\lib\\site-packages\\PySide2\\translations\\qtbase_ru.qm',
-   'DATA'),
-  ('PySide2\\translations\\qtbase_hu.qm',
-   'C:\\Users\\V '
-   'Sus\\AppData\\Local\\Programs\\Python\\Python39\\lib\\site-packages\\PySide2\\translations\\qtbase_hu.qm',
-   'DATA'),
-  ('PySide2\\translations\\qtbase_uk.qm',
-   'C:\\Users\\V '
-   'Sus\\AppData\\Local\\Programs\\Python\\Python39\\lib\\site-packages\\PySide2\\translations\\qtbase_uk.qm',
-   'DATA'),
-  ('PySide2\\translations\\qtbase_ko.qm',
-   'C:\\Users\\V '
-   'Sus\\AppData\\Local\\Programs\\Python\\Python39\\lib\\site-packages\\PySide2\\translations\\qtbase_ko.qm',
-   'DATA'),
-  ('PySide2\\qt.conf',
-   'C:\\Users\\V '
-   'Sus\\AppData\\Local\\Programs\\Python\\Python39\\lib\\site-packages\\PySide2\\qt.conf',
-   'DATA'),
-  ('PySide2\\translations\\qtbase_sk.qm',
-   'C:\\Users\\V '
-   'Sus\\AppData\\Local\\Programs\\Python\\Python39\\lib\\site-packages\\PySide2\\translations\\qtbase_sk.qm',
-   'DATA'),
-  ('PySide2\\translations\\qtbase_ja.qm',
-   'C:\\Users\\V '
-   'Sus\\AppData\\Local\\Programs\\Python\\Python39\\lib\\site-packages\\PySide2\\translations\\qtbase_ja.qm',
-   'DATA'),
-  ('PySide2\\translations\\qtbase_en.qm',
-   'C:\\Users\\V '
-   'Sus\\AppData\\Local\\Programs\\Python\\Python39\\lib\\site-packages\\PySide2\\translations\\qtbase_en.qm',
+   'Sus\\Desktop\\sfera\\sfera36_terminal\\build\\win7_spec\\base_library.zip',
    'DATA'),
   ('PySide2\\translations\\qtbase_lv.qm',
    'C:\\Users\\V '
    'Sus\\AppData\\Local\\Programs\\Python\\Python39\\lib\\site-packages\\PySide2\\translations\\qtbase_lv.qm',
    'DATA'),
-  ('PySide2\\translations\\qtbase_tr.qm',
-   'C:\\Users\\V '
-   'Sus\\AppData\\Local\\Programs\\Python\\Python39\\lib\\site-packages\\PySide2\\translations\\qtbase_tr.qm',
-   'DATA'),
-  ('PySide2\\translations\\qtbase_zh_TW.qm',
-   'C:\\Users\\V '
-   'Sus\\AppData\\Local\\Programs\\Python\\Python39\\lib\\site-packages\\PySide2\\translations\\qtbase_zh_TW.qm',
-   'DATA'),
-  ('PySide2\\translations\\qtbase_bg.qm',
-   'C:\\Users\\V '
-   'Sus\\AppData\\Local\\Programs\\Python\\Python39\\lib\\site-packages\\PySide2\\translations\\qtbase_bg.qm',
-   'DATA'),
-  ('PySide2\\translations\\qtbase_it.qm',
-   'C:\\Users\\V '
-   'Sus\\AppData\\Local\\Programs\\Python\\Python39\\lib\\site-packages\\PySide2\\translations\\qtbase_it.qm',
-   'DATA'),
-  ('PySide2\\translations\\qtbase_cs.qm',
-   'C:\\Users\\V '
-   'Sus\\AppData\\Local\\Programs\\Python\\Python39\\lib\\site-packages\\PySide2\\translations\\qtbase_cs.qm',
-   'DATA'),
-  ('PySide2\\translations\\qtbase_fi.qm',
-   'C:\\Users\\V '
-   'Sus\\AppData\\Local\\Programs\\Python\\Python39\\lib\\site-packages\\PySide2\\translations\\qtbase_fi.qm',
-   'DATA'),
   ('PySide2\\translations\\qtbase_fr.qm',
    'C:\\Users\\V '
    'Sus\\AppData\\Local\\Programs\\Python\\Python39\\lib\\site-packages\\PySide2\\translations\\qtbase_fr.qm',
    'DATA'),
-  ('PySide2\\translations\\qtbase_he.qm',
+  ('PySide2\\qt.conf',
    'C:\\Users\\V '
-   'Sus\\AppData\\Local\\Programs\\Python\\Python39\\lib\\site-packages\\PySide2\\translations\\qtbase_he.qm',
-   'DATA'),
-  ('PySide2\\translations\\qtbase_gd.qm',
-   'C:\\Users\\V '
-   'Sus\\AppData\\Local\\Programs\\Python\\Python39\\lib\\site-packages\\PySide2\\translations\\qtbase_gd.qm',
-   'DATA'),
-  ('PySide2\\translations\\qtbase_da.qm',
-   'C:\\Users\\V '
-   'Sus\\AppData\\Local\\Programs\\Python\\Python39\\lib\\site-packages\\PySide2\\translations\\qtbase_da.qm',
+   'Sus\\AppData\\Local\\Programs\\Python\\Python39\\lib\\site-packages\\PySide2\\qt.conf',
    'DATA'),
   ('PySide2\\translations\\qtbase_pl.qm',
    'C:\\Users\\V '
    'Sus\\AppData\\Local\\Programs\\Python\\Python39\\lib\\site-packages\\PySide2\\translations\\qtbase_pl.qm',
    'DATA'),
-  ('PySide2\\translations\\qtbase_ca.qm',
+  ('PySide2\\translations\\qtbase_uk.qm',
    'C:\\Users\\V '
-   'Sus\\AppData\\Local\\Programs\\Python\\Python39\\lib\\site-packages\\PySide2\\translations\\qtbase_ca.qm',
+   'Sus\\AppData\\Local\\Programs\\Python\\Python39\\lib\\site-packages\\PySide2\\translations\\qtbase_uk.qm',
+   'DATA'),
+  ('PySide2\\translations\\qtbase_it.qm',
+   'C:\\Users\\V '
+   'Sus\\AppData\\Local\\Programs\\Python\\Python39\\lib\\site-packages\\PySide2\\translations\\qtbase_it.qm',
+   'DATA'),
+  ('PySide2\\translations\\qtbase_ko.qm',
+   'C:\\Users\\V '
+   'Sus\\AppData\\Local\\Programs\\Python\\Python39\\lib\\site-packages\\PySide2\\translations\\qtbase_ko.qm',
+   'DATA'),
+  ('PySide2\\translations\\qtbase_gd.qm',
+   'C:\\Users\\V '
+   'Sus\\AppData\\Local\\Programs\\Python\\Python39\\lib\\site-packages\\PySide2\\translations\\qtbase_gd.qm',
+   'DATA'),
+  ('PySide2\\translations\\qtbase_bg.qm',
+   'C:\\Users\\V '
+   'Sus\\AppData\\Local\\Programs\\Python\\Python39\\lib\\site-packages\\PySide2\\translations\\qtbase_bg.qm',
    'DATA'),
   ('PySide2\\translations\\qtbase_es.qm',
    'C:\\Users\\V '
    'Sus\\AppData\\Local\\Programs\\Python\\Python39\\lib\\site-packages\\PySide2\\translations\\qtbase_es.qm',
    'DATA'),
+  ('PySide2\\translations\\qtbase_en.qm',
+   'C:\\Users\\V '
+   'Sus\\AppData\\Local\\Programs\\Python\\Python39\\lib\\site-packages\\PySide2\\translations\\qtbase_en.qm',
+   'DATA'),
+  ('PySide2\\translations\\qtbase_ru.qm',
+   'C:\\Users\\V '
+   'Sus\\AppData\\Local\\Programs\\Python\\Python39\\lib\\site-packages\\PySide2\\translations\\qtbase_ru.qm',
+   'DATA'),
+  ('PySide2\\translations\\qtbase_fi.qm',
+   'C:\\Users\\V '
+   'Sus\\AppData\\Local\\Programs\\Python\\Python39\\lib\\site-packages\\PySide2\\translations\\qtbase_fi.qm',
+   'DATA'),
   ('PySide2\\translations\\qtbase_ar.qm',
    'C:\\Users\\V '
    'Sus\\AppData\\Local\\Programs\\Python\\Python39\\lib\\site-packages\\PySide2\\translations\\qtbase_ar.qm',
    'DATA'),
+  ('PySide2\\translations\\qtbase_ca.qm',
+   'C:\\Users\\V '
+   'Sus\\AppData\\Local\\Programs\\Python\\Python39\\lib\\site-packages\\PySide2\\translations\\qtbase_ca.qm',
+   'DATA'),
+  ('PySide2\\translations\\qtbase_cs.qm',
+   'C:\\Users\\V '
+   'Sus\\AppData\\Local\\Programs\\Python\\Python39\\lib\\site-packages\\PySide2\\translations\\qtbase_cs.qm',
+   'DATA'),
+  ('PySide2\\translations\\qtbase_hu.qm',
+   'C:\\Users\\V '
+   'Sus\\AppData\\Local\\Programs\\Python\\Python39\\lib\\site-packages\\PySide2\\translations\\qtbase_hu.qm',
+   'DATA'),
+  ('PySide2\\translations\\qtbase_ja.qm',
+   'C:\\Users\\V '
+   'Sus\\AppData\\Local\\Programs\\Python\\Python39\\lib\\site-packages\\PySide2\\translations\\qtbase_ja.qm',
+   'DATA'),
+  ('PySide2\\translations\\qtbase_he.qm',
+   'C:\\Users\\V '
+   'Sus\\AppData\\Local\\Programs\\Python\\Python39\\lib\\site-packages\\PySide2\\translations\\qtbase_he.qm',
+   'DATA'),
   ('PySide2\\translations\\qtbase_de.qm',
    'C:\\Users\\V '
    'Sus\\AppData\\Local\\Programs\\Python\\Python39\\lib\\site-packages\\PySide2\\translations\\qtbase_de.qm',
+   'DATA'),
+  ('PySide2\\translations\\qtbase_zh_TW.qm',
+   'C:\\Users\\V '
+   'Sus\\AppData\\Local\\Programs\\Python\\Python39\\lib\\site-packages\\PySide2\\translations\\qtbase_zh_TW.qm',
+   'DATA'),
+  ('PySide2\\translations\\qtbase_sk.qm',
+   'C:\\Users\\V '
+   'Sus\\AppData\\Local\\Programs\\Python\\Python39\\lib\\site-packages\\PySide2\\translations\\qtbase_sk.qm',
+   'DATA'),
+  ('PySide2\\translations\\qtbase_tr.qm',
+   'C:\\Users\\V '
+   'Sus\\AppData\\Local\\Programs\\Python\\Python39\\lib\\site-packages\\PySide2\\translations\\qtbase_tr.qm',
+   'DATA'),
+  ('PySide2\\translations\\qtbase_da.qm',
+   'C:\\Users\\V '
+   'Sus\\AppData\\Local\\Programs\\Python\\Python39\\lib\\site-packages\\PySide2\\translations\\qtbase_da.qm',
    'DATA')],
  [])

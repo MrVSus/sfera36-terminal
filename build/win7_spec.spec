@@ -1,26 +1,28 @@
 # -*- mode: python ; coding: utf-8 -*-
 
+import os, sys
 from PyInstaller.utils.hooks import collect_data_files
 
 block_cipher = None
 
-# Ресурсы для PySide2
-datas = collect_data_files("PySide2")
+pyside2_dir = os.path.join(sys.prefix, "Lib", "site-packages", "PySide2", "plugins")
 
-# Импорты для PySide2
-hiddenimports = [
-    "PySide2.QtCore",
-    "PySide2.QtGui",
-    "PySide2.QtWidgets",
-    "shiboken2"
+datas = collect_data_files("PySide2")
+pyside2_plugins = [
+    (os.path.join(pyside2_dir, "platforms"), "PySide2/plugins/platforms"),
 ]
 
 a = Analysis(
     ['../main.py'],
     pathex=[],
     binaries=[],
-    datas=datas,
-    hiddenimports=hiddenimports,
+    datas=datas + pyside2_plugins,
+    hiddenimports=[
+        "PySide2.QtCore",
+        "PySide2.QtGui",
+        "PySide2.QtWidgets",
+        "shiboken2"
+    ],
     hookspath=[],
     hooksconfig={},
     runtime_hooks=[],
@@ -43,10 +45,6 @@ exe = EXE(
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,
-    upx=False,  # отключаем UPX
-    console=False,
-    version='version_info.txt',  
-    manifest='build/app.manifest',     
-    win_private_assemblies=True, 
+    upx=True,
+    console=True
 )
-
