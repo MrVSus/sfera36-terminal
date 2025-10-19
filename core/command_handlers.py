@@ -9,11 +9,18 @@ class CommandHandlers:
             '053': self.op_dec,
             '054': self.op_neg,
             '057': self.op_tst,
-            '1067': self.op_mfps,   
-            '1064': self.op_mtps,   
+            '067': self.op_mfps,   
+            '064': self.op_mtps,   
 
         }
-
+        self._branch = {
+            0o000400: self.op_br,   # BR offset
+            0o001000: self.op_bne,  # BNE offset
+            0o001400: self.op_beq,  # BEQ offset
+            0o010000: self.op_bpl,  # BPL offset
+            0o010400: self.op_bmi,  # BMI offset
+            0o000100: self.op_jmp,  # JMP <dst>
+        }       
     
         self._two = {
             0o01: self.op_mov,   
@@ -31,8 +38,13 @@ class CommandHandlers:
         except Exception:
             return (f"UNKNOWN {raw}", 0)
 
-        opcode_high = (word >> 12) & 0o17
+        # --- Ветвления (BR, BNE, BEQ, BPL, BMI, JMP) ---
+        for opcode, func in self._branch.items():
+            if (word & 0o177400) == opcode:  # маска верхних 9 бит
+                return func(pc, word)
 
+        # --- Двухоперандные команды (MOV, ADD, SUB...) ---
+        opcode_high = (word >> 12) & 0o17
         if opcode_high in self._two:
             src_mode = (word >> 9) & 0o7
             src_reg  = (word >> 6) & 0o7
@@ -41,6 +53,7 @@ class CommandHandlers:
             handler = self._two[opcode_high]
             return handler(pc, f"{raw[:2]}", src_mode, src_reg, dst_mode, dst_reg, raw)
 
+        # --- Однооперандные команды (CLR, INC, DEC...) ---
         op3 = raw[1:4]
         if op3 in self._one:
             wb_flag = raw[0]
@@ -49,6 +62,7 @@ class CommandHandlers:
             return self._one[op3](pc, wb_flag, mode, reg, raw)
 
         return (f"UNKNOWN {raw}", 0)
+
 
     # ---------- Декодеры ----------
     def decode_src(self, is_word: bool, pc: int, mode: int, reg: int):
@@ -159,23 +173,40 @@ class CommandHandlers:
 
     # ---------- MOVB ----------
     def op_movb(self, pc, kind2, sm, sr, dm, dr, raw):
+        # MOVB — копирование байта (8 бит)
         s_val, _, s_ex, s_ea = self.decode_src(False, pc, sm, sr)
         dst_pc = (pc + s_ex * 2) & 0xFFFF
         _, d_wb, d_ex, d_ea = self.decode_dst(False, dst_pc, dm, dr)
+
+        # если это память — читаем и записываем только нужный байт
         if d_ea is not None:
             dest_base = int(d_ea) & ~1
             old_word = self.cpu._mem_read_word(dest_base)
+
             if (int(d_ea) & 1):
+                # нечётный адрес → старший байт
                 new_word = ((s_val & 0xFF) << 8) | (old_word & 0x00FF)
             else:
+                # чётный адрес → младший байт
                 new_word = (old_word & 0xFF00) | (s_val & 0xFF)
+
             self.cpu._mem_write_word(dest_base, new_word)
         else:
-            d_wb(s_val & 0xFF)
+            # если регистр — записываем только младший байт
+            old_full = self.cpu.get_register(f"R{dr}")
+            new_full = (old_full & 0xFF00) | (s_val & 0xFF)
+            self.cpu.set_register(f"R{dr}", new_full)
+
+        # Флаги
         self.cpu._set_flag("N", (s_val & 0x80) != 0)
         self.cpu._set_flag("Z", (s_val & 0xFF) == 0)
         self.cpu._set_flag("V", 0)
+
+        # PDP-11: флаг C копируется из старшего бита исходного байта
+        self.cpu._set_flag("C", (s_val >> 7) & 1)
+
         return "MOVB", s_ex + d_ex
+
     
     # ---------- ADD ----------
     def op_add(self, pc, kind2, sm, sr, dm, dr, raw):
@@ -223,12 +254,67 @@ class CommandHandlers:
     def op_mfps(self, pc, wb_flag, mode, reg, raw):
         regname = f"R{reg}"
         psw = self.cpu.db.get_psw() & 0xFF
-        self.cpu.set_register(regname, psw)
+        old = self.cpu.get_register(regname)
+        new = (old & 0xFF00) | psw
+        self.cpu.set_register(regname, new)
         return f"MFPS {regname}", 0
 
     # ---------- MTPS ----------
     def op_mtps(self, pc, wb_flag, mode, reg, raw):
         regname = f"R{reg}"
-        psw_val = self.cpu.get_register(regname) & 0xFF
-        self.cpu.db.set_psw(psw_val)
+        reg_val = self.cpu.get_register(regname) & 0xFF
+        self.cpu.db.set_psw(reg_val)
         return f"MTPS {regname}", 0
+
+    # ---------- ВЕТВЛЕНИЯ ----------
+
+    def _branch_offset(self, pc, word):
+        """Вычислить смещение для ветвлений (8-битный offset со знаком)."""
+        offset = word & 0xFF
+        if offset & 0x80:  # отрицательное
+            offset -= 0x100
+        # Смещение *2 (слова), +2 для следующей инструкции
+        return (pc + 2 + offset * 2) & 0xFFFF
+
+    def op_br(self, pc, word):
+        new_pc = self._branch_offset(pc, word)
+        self.cpu.set_register("R7", new_pc)
+        return f"BR {new_pc:06o}", 0
+
+    def op_bne(self, pc, word):
+        if self.cpu.flags.Z == 0:
+            new_pc = self._branch_offset(pc, word)
+            self.cpu.set_register("R7", new_pc)
+            return f"BNE {new_pc:06o}", 0
+        return "BNE (no branch)", 0
+
+    def op_beq(self, pc, word):
+        if self.cpu.flags.Z == 1:
+            new_pc = self._branch_offset(pc, word)
+            self.cpu.set_register("R7", new_pc)
+            return f"BEQ {new_pc:06o}", 0
+        return "BEQ (no branch)", 0
+
+    def op_bpl(self, pc, word):
+        if self.cpu.flags.N == 0:
+            new_pc = self._branch_offset(pc, word)
+            self.cpu.set_register("R7", new_pc)
+            return f"BPL {new_pc:06o}", 0
+        return "BPL (no branch)", 0
+
+    def op_bmi(self, pc, word):
+        if self.cpu.flags.N == 1:
+            new_pc = self._branch_offset(pc, word)
+            self.cpu.set_register("R7", new_pc)
+            return f"BMI {new_pc:06o}", 0
+
+        return "BMI (no branch)", 0
+
+    def op_jmp(self, pc, word):
+        mode = (word >> 3) & 0x7
+        reg = word & 0x7
+        _, _, _, ea = self.cpu.resolve_operand(is_word=True, mode=mode, reg=reg, pc=pc)
+        if ea is not None:
+            self.cpu.set_register("R7", ea & 0xFFFF)
+            return f"JMP {ea:06o}", 0
+        return "JMP (invalid)", 0
