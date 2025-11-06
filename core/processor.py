@@ -181,9 +181,10 @@ class CPU:
     def _run_program(self):
         out = []
         pc = self._get_pc()
+        self.executing = True
 
         while True:
-            raw = self._raw_mem_fetch(pc)  
+            raw = self._raw_mem_fetch(pc)
             try:
                 wval = int(raw, 8)
             except ValueError:
@@ -195,17 +196,32 @@ class CPU:
                 break
 
             try:
+
                 text, extra_words = self.op.execute(pc=pc, raw_word=raw)
-                if self.debug:
+
+               
+                new_pc = self.get_register("R7")
+                if new_pc != pc:
+                    pc = new_pc
+                else:
+                    pc = (pc + 2 + (extra_words * 2)) & 0xFFFF
+
+                if self.debug and text:
                     out.append(f"{pc:06o}: {text}")
+
+
+                if len(out) > 2000:
+                    out.append("ОШИБКА: превышено количество шагов")
+                    break
+
             except Exception as e:
                 out.append(f"{pc:06o}: Ошибка: {e}")
-                extra_words = 0
+                pc = (pc + 2) & 0xFFFF
 
-            pc = (pc + 2 + (extra_words * 2)) & 0xFFFF
             self._set_pc(pc)
 
         return "\n".join(out) if out else ""
+
 
     # ---------- Нормализация ----------
     def _raw_mem_fetch(self, addr: int) -> str:
@@ -285,9 +301,20 @@ class CPU:
             psw &= ~mask
         self.db.set_psw(psw)
 
+        # синхронизируем кеш-флаги в CPU (все флаги)
+        psw_now = self.db.get_psw()
+        self.flags.N = 1 if (psw_now & 8) else 0
+        self.flags.Z = 1 if (psw_now & 4) else 0
+        self.flags.C = 1 if (psw_now & 1) else 0
+        self.flags.V = 1 if (psw_now & 2) else 0
+        self.flags.T = 1 if (psw_now & 16) else 0
+
     def _get_flag(self, flag: str) -> int:
         mask = {"C":1, "V":2, "Z":4, "N":8, "T":16}[flag]
-        return 1 if (self.db.get_psw() & mask) else 0
+        psw = self.db.get_psw() & 0xFF
+        return 1 if (psw & mask) else 0
+
+
 
 
     # ---------- Адресация ----------

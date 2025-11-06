@@ -38,13 +38,9 @@ class CommandHandlers:
         except Exception:
             return (f"UNKNOWN {raw}", 0)
 
-        # --- Ветвления (BR, BNE, BEQ, BPL, BMI, JMP) ---
-        for opcode, func in self._branch.items():
-            if (word & 0o177400) == opcode:  # маска верхних 9 бит
-                return func(pc, word)
-
-        # --- Двухоперандные команды (MOV, ADD, SUB...) ---
         opcode_high = (word >> 12) & 0o17
+
+        # --- двухоперандные ---
         if opcode_high in self._two:
             src_mode = (word >> 9) & 0o7
             src_reg  = (word >> 6) & 0o7
@@ -53,7 +49,7 @@ class CommandHandlers:
             handler = self._two[opcode_high]
             return handler(pc, f"{raw[:2]}", src_mode, src_reg, dst_mode, dst_reg, raw)
 
-        # --- Однооперандные команды (CLR, INC, DEC...) ---
+        # --- однооперандные ---
         op3 = raw[1:4]
         if op3 in self._one:
             wb_flag = raw[0]
@@ -61,7 +57,25 @@ class CommandHandlers:
             reg     = int(raw[5], 8)
             return self._one[op3](pc, wb_flag, mode, reg, raw)
 
+        # --- Ветвления ---
+        opcode8 = (word >> 8) & 0xFF
+        offset  = word & 0xFF
+        if 0o0400 <= word <= 0o0777:
+            return self.op_br(pc, word)
+        elif 0o001000 <= word <= 0o001377:
+            return self.op_bne(pc, word)
+        elif 0o001400 <= word <= 0o001777:
+            return self.op_beq(pc, word)
+        elif 0o100000 <= word <= 0o100377:
+            return self.op_bpl(pc, word)
+        elif 0o100400 <= word <= 0o100777:
+            return self.op_bmi(pc, word)
+        elif 0o0100 <= word <= 0o0177:
+            return self.op_jmp(pc, word)
+
         return (f"UNKNOWN {raw}", 0)
+
+
 
 
     # ---------- Декодеры ----------
@@ -82,8 +96,10 @@ class CommandHandlers:
         mask = 0xFFFF if is_word else 0xFF
         sign_bit = 15 if is_word else 7
         v = value & mask
-        self.cpu.flags.N = (v >> sign_bit) & 1
-        self.cpu.flags.Z = 1 if v == 0 else 0
+        n = (v >> sign_bit) & 1
+        z = 1 if v == 0 else 0
+        self.cpu._set_flag("N", n)
+        self.cpu._set_flag("Z", z)
 
     # ---------- CLR / CLRB ----------
     def op_clr(self, pc, wb_flag, mode, reg, raw):
@@ -268,12 +284,15 @@ class CommandHandlers:
 
     # ---------- ВЕТВЛЕНИЯ ----------
 
+    def _get_psw_flag(self, name):
+        psw = self.cpu.db.get_psw()
+        mask = {"C":1, "V":2, "Z":4, "N":8}[name]
+        return 1 if (psw & mask) else 0
+
     def _branch_offset(self, pc, word):
-        """Вычислить смещение для ветвлений (8-битный offset со знаком)."""
         offset = word & 0xFF
         if offset & 0x80:  # отрицательное
             offset -= 0x100
-        # Смещение *2 (слова), +2 для следующей инструкции
         return (pc + 2 + offset * 2) & 0xFFFF
 
     def op_br(self, pc, word):
@@ -282,32 +301,43 @@ class CommandHandlers:
         return f"BR {new_pc:06o}", 0
 
     def op_bne(self, pc, word):
-        if self.cpu.flags.Z == 0:
+        z = self.cpu._get_flag("Z")
+        if self.cpu.debug:
+            print(f"[BNE] pc={pc:06o} Z={z}")
+        if z == 0:
             new_pc = self._branch_offset(pc, word)
-            self.cpu.set_register("R7", new_pc)
+            self.cpu._set_pc(new_pc)
             return f"BNE {new_pc:06o}", 0
         return "BNE (no branch)", 0
 
     def op_beq(self, pc, word):
-        if self.cpu.flags.Z == 1:
+        z = self.cpu._get_flag("Z")
+        if self.cpu.debug:
+            print(f"[BEQ] pc={pc:06o} Z={z}")
+        if z == 1:
             new_pc = self._branch_offset(pc, word)
-            self.cpu.set_register("R7", new_pc)
+            self.cpu._set_pc(new_pc)
             return f"BEQ {new_pc:06o}", 0
         return "BEQ (no branch)", 0
 
     def op_bpl(self, pc, word):
-        if self.cpu.flags.N == 0:
+        n = self.cpu._get_flag("N")
+        if self.cpu.debug:
+            print(f"[BPL] pc={pc:06o} N={n}")
+        if n == 0:
             new_pc = self._branch_offset(pc, word)
-            self.cpu.set_register("R7", new_pc)
+            self.cpu._set_pc(new_pc)
             return f"BPL {new_pc:06o}", 0
         return "BPL (no branch)", 0
 
     def op_bmi(self, pc, word):
-        if self.cpu.flags.N == 1:
+        n = self.cpu._get_flag("N")
+        if self.cpu.debug:
+            print(f"[BMI] pc={pc:06o} N={n}")
+        if n == 1:
             new_pc = self._branch_offset(pc, word)
-            self.cpu.set_register("R7", new_pc)
+            self.cpu._set_pc(new_pc)
             return f"BMI {new_pc:06o}", 0
-
         return "BMI (no branch)", 0
 
     def op_jmp(self, pc, word):
