@@ -6,7 +6,7 @@ from .command_parser import CommandParser
 
 class CPU:
 
-    def __init__(self, db_manager=None, db_debug=False, debug=False):
+    def __init__(self, db_manager=None, db_debug=False, debug=True):
         self.db = db_manager or DatabaseManager(debug=db_debug)
         self.parser = CommandParser()
         self.op = CommandHandlers(self)
@@ -312,7 +312,12 @@ class CPU:
     def _get_flag(self, flag: str) -> int:
         mask = {"C":1, "V":2, "Z":4, "N":8, "T":16}[flag]
         psw = self.db.get_psw() & 0xFF
+
+        print(f"[DBG PSW] psw={psw:03o} flag={flag} -> {(psw & mask)!=0}")
+
         return 1 if (psw & mask) else 0
+
+
 
 
 
@@ -418,24 +423,56 @@ class CPU:
             wb = (lambda v, a=ea: write_ea(a, v)) if as_dest else None
             return val, wb, 0, ea
 
-        # ----------------- mode 6: X(R) / PC-rel -----------------
+                # ----------------- mode 6: X(R) / PC-rel (Indexed) -----------------
         if mode == 6:
-            disp = self._mem_read_word((pc + 2) & 0xFFFF)
-            base = (self.get_register(reg_name) if reg != 7 else (pc + 2)) & 0xFFFF
-            ea = (base + disp) & 0xFFFF
-            val = read_ea(ea)
-            wb = (lambda v, a=ea: write_ea(a, v)) if as_dest else None
-            return val, wb, 1, ea
+            # displacement word is in the instruction stream at pc+2
+            disp_addr = (pc + 2) & 0xFFFF
+            disp = self._mem_read_word(disp_addr)
+            extra_words = 1
 
-        # ----------------- mode 7: @X(R) / PC-rel deferred -----------------
+            # base is Rn except when reg == 7 (PC) -> base = pc + 4  (note: pc+4 here!)
+            base = (self.get_register(reg_name) if reg != 7 else (pc + 4)) & 0xFFFF
+            ea = (base + disp) & 0xFFFF
+
+            if self.debug:
+                print(f"[DBG RESOLVE M6] pc={pc:06o} reg=R{reg} base={base:06o} disp={disp:06o} -> ea={ea:06o}")
+
+            if is_word:
+                val = self._mem_read_word(ea)
+                wb = (lambda v, a=ea: self._mem_write_word(a, v)) if as_dest else None
+                return val, wb, extra_words, ea
+            else:
+                val = self._mem_read_byte(ea)
+                wb = (lambda v, a=ea: self._mem_write_byte(a, v)) if as_dest else None
+                return val, wb, extra_words, ea
+
+
+        # ----------------- mode 7: @X(R) / PC-rel deferred (Indirect Indexed) -----------------
         if mode == 7:
-            disp = self._mem_read_word((pc + 2) & 0xFFFF)
-            base = (self.get_register(reg_name) if reg != 7 else (pc + 2)) & 0xFFFF
+            # displacement word is in the instruction stream at pc+2
+            disp_addr = (pc + 2) & 0xFFFF
+            disp = self._mem_read_word(disp_addr)
+            extra_words = 1
+
+            # base is Rn except when reg == 7 (PC) -> base = pc + 4  (note: pc+4 here!)
+            base = (self.get_register(reg_name) if reg != 7 else (pc + 4)) & 0xFFFF
             ptr = (base + disp) & 0xFFFF
-            ea = self._mem_read_word(ptr)
-            val = read_ea(ea)
-            wb = (lambda v, a=ea: write_ea(a, v)) if as_dest else None
-            return val, wb, 1, ea
+
+            ea = self._mem_read_word(ptr) & 0xFFFF
+
+            if self.debug:
+                print(f"[DBG RESOLVE M7] pc={pc:06o} reg=R{reg} base={base:06o} disp={disp:06o} ptr={ptr:06o} -> ea={ea:06o}")
+
+            if is_word:
+                val = self._mem_read_word(ea)
+                wb = (lambda v, a=ea: self._mem_write_word(a, v)) if as_dest else None
+                return val, wb, extra_words, ea
+            else:
+                val = self._mem_read_byte(ea)
+                wb = (lambda v, a=ea: self._mem_write_byte(a, v)) if as_dest else None
+                return val, wb, extra_words, ea
+
+
 
         raise ValueError(f"Unknown addressing mode: {mode} for R{reg}")
 
